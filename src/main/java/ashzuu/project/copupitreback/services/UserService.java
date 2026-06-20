@@ -7,6 +7,7 @@ import ashzuu.project.copupitreback.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service pour gérer les opérations liées aux utilisateurs.
@@ -28,5 +29,13 @@ public class UserService {
 
     public List<UserDTO> getAll(){
         return UserMapper.toDto(repo.findAll());
+    }
+
+    public UserDTO getByUsername(String username){
+        Optional<User> user = this.repo.findByUsername(username);
+        if(user.isEmpty()){
+            throw new RuntimeException("Username inconnu");
+        }
+        return UserMapper.toDto(user.get());
     }
 }

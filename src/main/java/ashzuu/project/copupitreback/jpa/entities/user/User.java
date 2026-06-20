@@ -3,13 +3,14 @@ package ashzuu.project.copupitreback.jpa.entities.user;
 import ashzuu.project.copupitreback.jpa.entities.Application;
 import ashzuu.project.copupitreback.jpa.entities.organization.OrganizationAdmin;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -22,9 +23,11 @@ import java.util.Set;
  * - Peut postuler à des renforts via {@link ashzuu.project.copupitreback.jpa.entities.Application}.
  * - Possède des instruments secondaires via {@link UserSecondaryInstrument}.
  */
-@Getter
-@Setter
 @Entity
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "users", schema = "main")
 public class User {
     @Id
@@ -67,15 +70,15 @@ public class User {
 
     @NonNull
     @OneToMany(mappedBy = "user")
-    private Set<Application> applications = new LinkedHashSet<>();
+    private List<Application> applications = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "user")
-    private Set<OrganizationAdmin> organizationAdmins = new LinkedHashSet<>();
+    private List<OrganizationAdmin> organizationAdmins = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "user")
-    private Set<UserSecondaryInstrument> userSecondaryInstruments = new LinkedHashSet<>();
+    private List<UserSecondaryInstrument> userSecondaryInstruments = new ArrayList<>();
 
 
 }

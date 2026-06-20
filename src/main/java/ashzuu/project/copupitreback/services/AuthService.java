@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * <h1>AuthService</h1>
@@ -48,17 +50,22 @@ public class AuthService {
             throw new RuntimeException("Email déjà utilisé");
         }
 
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setMainInstrument(request.getMainInstrument());
-        user.setMusicalDescription(request.getMusicalDescription());
-        user.setYearsOfPractice(request.getYearsOfPractice());
-        user.setRole(Role.USER);
-        user.setCreatedAt(Instant.now());
+        User user =
+            User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .mainInstrument(request.getMainInstrument())
+                .musicalDescription(request.getMusicalDescription())
+                .yearsOfPractice(request.getYearsOfPractice())
+                .role(Role.USER)
+                .createdAt(Instant.now())
+                .applications(new ArrayList<>())
+                .organizationAdmins(new ArrayList<>())
+                .userSecondaryInstruments(new ArrayList<>())
+                .build();
 
         userRepository.save(user);
 
@@ -66,13 +73,14 @@ public class AuthService {
         String token = jwtUtil.generateToken(userDetails);
 
         return AuthResponse.builder()
-                .token(token)
-                .username(user.getUsername())
-                .role(user.getRole().name())
-                .build();
+            .token(token)
+            .username(user.getUsername())
+            .role(user.getRole().name())
+            .build();
     }
 
     public AuthResponse login(LoginRequest request) {
+        // Todo : Corriger le fait de pouvoir se connecter aussi par email !
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
