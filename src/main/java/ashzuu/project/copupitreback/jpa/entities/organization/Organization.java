@@ -8,7 +8,9 @@ import org.hibernate.annotations.ColumnDefault;
 import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -63,31 +65,31 @@ public class Organization {
 
     @NonNull
     @OneToMany(mappedBy = "organization")
-    private Set<AnnualNeeds> annualNeeds = new LinkedHashSet<>();
+    private List<AnnualNeeds> annualNeeds = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization")
-    private Set<Concert> concerts = new LinkedHashSet<>();
+    private List<Concert> concerts = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization")
-    private Set<EquipmentRequest> equipmentRequests = new LinkedHashSet<>();
+    private List<EquipmentRequest> equipmentRequests = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization")
-    private Set<OrganizationAdmin> organizationAdmins = new LinkedHashSet<>();
+    private List<OrganizationAdmin> organizationAdmins = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization")
-    private Set<RehearsalManual> rehearsalManuals = new LinkedHashSet<>();
+    private List<RehearsalManual> rehearsalManuals = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization")
-    private Set<RehearsalSchedule> rehearsalSchedules = new LinkedHashSet<>();
+    private List<RehearsalSchedule> rehearsalSchedules = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization")
-    private Set<ReinforcementRequest> reinforcementRequests = new LinkedHashSet<>();
+    private List<ReinforcementRequest> reinforcementRequests = new ArrayList<>();
 
 
 }

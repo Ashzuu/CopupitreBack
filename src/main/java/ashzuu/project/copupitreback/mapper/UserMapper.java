@@ -1,6 +1,7 @@
 package ashzuu.project.copupitreback.mapper;
 
 import ashzuu.project.copupitreback.dto.user.UserDTO;
+import ashzuu.project.copupitreback.jpa.entities.organization.OrganizationAdmin;
 import ashzuu.project.copupitreback.jpa.entities.user.User;
 import ashzuu.project.copupitreback.jpa.entities.user.UserSecondaryInstrument;
 
@@ -30,5 +31,13 @@ public class UserMapper {
 
     public static List<UserDTO> toDto(List<User> users){
         return users.stream().map(UserMapper::toDto).collect(Collectors.toList());
+    }
+
+    public static String toString(User user){
+        return user.getFirstName() + " " + user.getLastName();
+    }
+
+    public static List<String> toString(List<User> users){
+        return users.stream().map(UserMapper::toString).toList();
     }
 }

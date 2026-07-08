@@ -1,6 +1,7 @@
 package ashzuu.project.copupitreback.controllers;
 
 import ashzuu.project.copupitreback.dto.user.UserDTO;
+import ashzuu.project.copupitreback.jpa.entities.organization.Organization;
 import ashzuu.project.copupitreback.security.UserDetailsImpl;
 import ashzuu.project.copupitreback.services.UserService;
 import org.springframework.http.ResponseEntity;

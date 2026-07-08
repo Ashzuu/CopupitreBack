@@ -4,6 +4,7 @@ import ashzuu.project.copupitreback.dto.equipment.EquipmentRequestDTO;
 import ashzuu.project.copupitreback.jpa.entities.equipment.EquipmentRequest;
 import ashzuu.project.copupitreback.jpa.entities.equipment.EquipmentRequestDate;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -15,6 +16,11 @@ import java.util.stream.Collectors;
  */
 public class EquipmentMapper {
 
+    /**
+     * Transforme les {@link EquipmentRequest} en {@link EquipmentRequestDTO} afin de communiquer via les différentes couches front / back
+     * @param request Request a transformer
+     * @return Le DTO correspondant à la donnée en entrée
+     */
     public static EquipmentRequestDTO toDto(EquipmentRequest request) {
         return EquipmentRequestDTO.builder()
             .id(request.getId())
@@ -29,5 +35,9 @@ public class EquipmentMapper {
                 .map(d -> d.getId().getEventDate().toString())
                 .collect(Collectors.toList()))
             .build();
+    }
+
+    public static List<EquipmentRequestDTO> toDto(List<EquipmentRequest> requests){
+        return requests.stream().map(EquipmentMapper::toDto).toList();
     }
 }

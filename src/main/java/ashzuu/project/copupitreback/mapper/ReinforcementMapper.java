@@ -5,6 +5,8 @@ import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementResponseDTO;
 import ashzuu.project.copupitreback.jpa.entities.Application;
 import ashzuu.project.copupitreback.jpa.entities.ReinforcementRequest;
 
+import java.util.List;
+
 /**
  * Composant responsable de la conversion entre les annonces de renfort, les candidatures et leurs DTOs respectifs.
  * <p>
@@ -14,6 +16,22 @@ import ashzuu.project.copupitreback.jpa.entities.ReinforcementRequest;
  */
 public class ReinforcementMapper {
     public static ReinforcementAnnouncementDTO toAnnouncementDto(ReinforcementRequest request) {
-        return ReinforcementAnnouncementDTO.builder().build();
+        return ReinforcementAnnouncementDTO.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .deadline(request.getDeadline())
+                .createdAt(request.getCreatedAt())
+                .requiredCount(request.getRequiredQuantity())
+                .location(request.getEventLocation())
+                .eventDate(request.getEventDate())
+                .requiredCount(request.getRequiredQuantity())
+                .instrumentNeeded(request.getInstrumentNeeded())
+                .organizationName(request.getOrganization().getName())
+                .status(request.getStatus())
+            .build();
+    }
+
+    public static List<ReinforcementAnnouncementDTO> toAnnouncementDto(List<ReinforcementRequest> requests){
+        return requests.stream().map(ReinforcementMapper::toAnnouncementDto).toList();
     }
 }
