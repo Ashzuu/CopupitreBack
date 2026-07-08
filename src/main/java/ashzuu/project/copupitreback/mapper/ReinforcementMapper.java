@@ -87,6 +87,10 @@ public class ReinforcementMapper {
                 .build();
     }
 
+    public static List<ReinforcementResponseDTO> toResponseDto(List<Application> apps){
+        return apps.stream().map(ReinforcementMapper::toResponseDto).toList();
+    }
+
     public static Application toEntity(ReinforcementResponseDTO dto) {
         if (dto == null) {
             return null;

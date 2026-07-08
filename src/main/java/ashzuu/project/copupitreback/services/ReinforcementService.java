@@ -7,6 +7,7 @@ import ashzuu.project.copupitreback.jpa.entities.Application;
 import ashzuu.project.copupitreback.jpa.entities.ReinforcementRequest;
 import ashzuu.project.copupitreback.jpa.entities.organization.Organization;
 import ashzuu.project.copupitreback.jpa.entities.user.User;
+import ashzuu.project.copupitreback.jpa.repositories.ApplicationRepository;
 import ashzuu.project.copupitreback.jpa.repositories.OrganizationRepository;
 import ashzuu.project.copupitreback.jpa.repositories.ReinforcementRepository;
 import ashzuu.project.copupitreback.jpa.repositories.UserRepository;
@@ -42,6 +43,8 @@ public class ReinforcementService {
      */
     private final UserRepository userRepo;
 
+    private final ApplicationRepository applicationRepo;
+
     /**
      * Constructeur pour injecter les dépendances requises.
      *
@@ -49,10 +52,15 @@ public class ReinforcementService {
      * @param orgRepo le dépôt des organisations
      * @param userRepo le dépôt des utilisateurs
      */
-    public ReinforcementService(ReinforcementRepository repo, OrganizationRepository orgRepo, UserRepository userRepo){
+    public ReinforcementService(
+            ReinforcementRepository repo,
+            OrganizationRepository orgRepo,
+            UserRepository userRepo,
+            ApplicationRepository applicationRepo){
         this.repo = repo;
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
+        this.applicationRepo = applicationRepo;
     }
 
     /**
@@ -66,6 +74,10 @@ public class ReinforcementService {
      */
     public List<ReinforcementAnnouncementDTO> getAllAnnouncements(){
         return ReinforcementMapper.toAnnouncementDto(this.repo.findAll());
+    }
+
+    public List<ReinforcementResponseDTO> getAllResponses(String id){
+        return ReinforcementMapper.toResponseDto(this.applicationRepo.findAllByIdRequest(Long.parseLong(id)));
     }
 
     /**
@@ -200,5 +212,25 @@ public class ReinforcementService {
                 current.add(newApp);
             }
         }
+    }
+
+    /**
+     * Supprime une annonce de renfort si l'utilisateur est administrateur de l'organisation associée.
+     *
+     * @param id l'identifiant de l'annonce à supprimer
+     * @param userDetails les détails de l'utilisateur connecté
+     */
+    @Transactional
+    public void deleteAnnouncement(Long id, ashzuu.project.copupitreback.security.UserDetailsImpl userDetails) {
+        ReinforcementRequest request = repo.findById(id)
+                .orElseThrow(() -> new UnknownID("Demande de renfort inconnue"));
+
+        if (request.getOrganization() != null) {
+            if (!orgRepo.isAdminOfOrganization(userDetails.getId(), request.getOrganization().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
+            }
+        }
+
+        repo.delete(request);
     }
 }

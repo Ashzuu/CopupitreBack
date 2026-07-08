@@ -1,15 +1,14 @@
 package ashzuu.project.copupitreback.controllers;
 
 import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementAnnouncementDTO;
+import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementResponseDTO;
 import ashzuu.project.copupitreback.jpa.repositories.ReinforcementRepository;
 import ashzuu.project.copupitreback.mapper.ReinforcementMapper;
+import ashzuu.project.copupitreback.security.UserDetailsImpl;
 import ashzuu.project.copupitreback.services.ReinforcementService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -51,10 +50,26 @@ public class ReinforcementController {
                 .ok(this.service.getAllAnnouncements());
     }
 
+    @RequestMapping("/{id}/responses")
+    public ResponseEntity<List<ReinforcementResponseDTO>> getAllResponses(@PathVariable String id){
+        return ResponseEntity.ok(this.service.getAllResponses(id));
+    }
+
     @PostMapping("/save")
     public ResponseEntity<ReinforcementAnnouncementDTO> saveAnnouncement(
             @AuthenticationPrincipal ashzuu.project.copupitreback.security.UserDetailsImpl userDetails,
             @RequestBody ReinforcementAnnouncementDTO dto) {
         return ResponseEntity.ok(this.service.saveAnnouncement(dto, userDetails));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAnnouncement(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable Long id) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        this.service.deleteAnnouncement(id, userDetails);
+        return ResponseEntity.noContent().build();
     }
 }

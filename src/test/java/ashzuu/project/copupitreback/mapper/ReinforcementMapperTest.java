@@ -130,7 +130,7 @@ class ReinforcementMapperTest {
 
     @Test
     void testToResponseDtoNull() {
-        assertNull(ReinforcementMapper.toResponseDto(null));
+        assertNull(ReinforcementMapper.toResponseDto((Application) null));
     }
 
     @Test
