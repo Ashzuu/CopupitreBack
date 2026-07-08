@@ -1,8 +1,7 @@
 package ashzuu.project.copupitreback.jpa.entities.equipment;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -17,6 +16,9 @@ import org.hibernate.annotations.OnDeleteAction;
 @Getter
 @Setter
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "equipment_request_dates", schema = "main")
 public class EquipmentRequestDate {
     @EmbeddedId

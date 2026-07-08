@@ -3,24 +3,55 @@ package ashzuu.project.copupitreback.controllers;
 import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementAnnouncementDTO;
 import ashzuu.project.copupitreback.jpa.repositories.ReinforcementRepository;
 import ashzuu.project.copupitreback.mapper.ReinforcementMapper;
+import ashzuu.project.copupitreback.services.ReinforcementService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Contrôleur REST exposant les points d'accès (endpoints) pour la gestion des renforts.
+ * <p>
+ * Ce contrôleur gère les requêtes liées aux annonces de renfort pour des musiciens ou orchestres.
+ * </p>
+ */
 @RestController
 @RequestMapping("/reinforcements")
 public class ReinforcementController {
-    private final ReinforcementRepository repo;
 
-    public ReinforcementController(ReinforcementRepository repo){
-        this.repo = repo;
+    /**
+     * Service gérant la logique métier liée aux renforts.
+     */
+    private final ReinforcementService service;
+
+    /**
+     * Constructeur pour injecter les dépendances requises.
+     *
+     * @param service le service des renforts
+     */
+    public ReinforcementController(ReinforcementService service){
+        this.service = service;
     }
 
+    /**
+     * Point d'accès pour récupérer toutes les annonces de renfort.
+     * <p>
+     * Cette méthode répond aux requêtes HTTP pour lister toutes les annonces de renfort actives.
+     * </p>
+     *
+     * @return une {@link ResponseEntity} contenant la liste de toutes les annonces de renfort sous forme de DTO avec un code HTTP 200 (OK)
+     */
     @RequestMapping("/all")
     public ResponseEntity<List<ReinforcementAnnouncementDTO>> getAllAnnouncements(){
         return ResponseEntity
-                .ok(ReinforcementMapper.toAnnouncementDto(this.repo.findAll()));
+                .ok(this.service.getAllAnnouncements());
+    }
+
+    @PostMapping("/save")
+    public ResponseEntity<ReinforcementAnnouncementDTO> saveAnnouncement(@RequestBody ReinforcementAnnouncementDTO dto) {
+        return ResponseEntity.ok(this.service.saveAnnouncement(dto));
     }
 }

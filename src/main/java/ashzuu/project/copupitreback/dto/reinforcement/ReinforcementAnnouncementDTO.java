@@ -1,8 +1,10 @@
 package ashzuu.project.copupitreback.dto.reinforcement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.List;
 
@@ -15,11 +17,15 @@ import java.util.List;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReinforcementAnnouncementDTO {
     @JsonProperty()
     private Long id;
     @JsonProperty()
     private String title;
+    @JsonProperty()
+    private Long organizationId;
     @JsonProperty()
     private String organizationName;
     @JsonProperty()
@@ -29,11 +35,13 @@ public class ReinforcementAnnouncementDTO {
     @JsonProperty()
     private Instant deadline;
     @JsonProperty()
-    private String location;
+    private String eventLocation;
+    @JsonProperty()
+    private String repertoireDetails;
     @JsonProperty()
     private String description;
     @JsonProperty()
-    private Integer requiredCount;
+    private Integer requiredQuantity;
     @JsonProperty()
     private Integer validatedCount;
     @JsonProperty()

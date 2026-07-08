@@ -12,21 +12,41 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * <h1>AuthController</h1>
- * <p><strong>Ce que fait la nouvelle classe :</strong> Contrôleur REST exposant les endpoints pour l'inscription et la connexion.</p>
- * <p><strong>Dans quel but elle a été créée :</strong> Permettre aux clients (comme l'application Angular) d'envoyer des requêtes HTTP POST pour s'authentifier ou créer un compte.</p>
- * <p><strong>À quoi celle-ci est-elle liée :</strong> Elle fait appel à AuthService pour traiter les requêtes et renvoie les réponses sous format JSON.</p>
+ * Contrôleur REST exposant les points d'accès (endpoints) pour l'inscription et la connexion.
+ * <p>
+ * Ce contrôleur permet aux clients (comme une application frontend) d'envoyer des requêtes HTTP POST
+ * pour s'authentifier ou créer un compte au sein de la plateforme.
+ * </p>
  */
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
+    /**
+     * Service gérant la logique métier d'authentification.
+     */
     private final AuthService authService;
 
+    /**
+     * Constructeur pour injecter les dépendances requises.
+     *
+     * @param authService le service d'authentification
+     */
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
+    /**
+     * Point d'accès pour l'inscription d'un nouvel utilisateur.
+     * <p>
+     * Reçoit une requête POST contenant les détails du nouvel utilisateur, valide ces données,
+     * puis appelle le service d'authentification pour créer le compte.
+     * </p>
+     *
+     * @param request l'objet de requête contenant les données d'inscription validées
+     * @return une {@link ResponseEntity} contenant la réponse d'authentification (avec jeton JWT) en cas de succès,
+     *         ou une réponse d'erreur 400 (Bad Request) si l'inscription échoue
+     */
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         try {
@@ -36,6 +56,17 @@ public class AuthController {
         }
     }
 
+    /**
+     * Point d'accès pour la connexion d'un utilisateur existant.
+     * <p>
+     * Reçoit une requête POST contenant les identifiants de l'utilisateur, valide ces données,
+     * puis appelle le service d'authentification pour valider les accès.
+     * </p>
+     *
+     * @param request l'objet de requête contenant les identifiants de connexion validés
+     * @return une {@link ResponseEntity} contenant la réponse d'authentification (avec jeton JWT) en cas de succès,
+     *         ou une réponse d'erreur 401 (Unauthorized) en cas d'identifiants invalides ou d'échec
+     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         try {

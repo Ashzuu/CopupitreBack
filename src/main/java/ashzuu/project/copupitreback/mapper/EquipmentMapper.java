@@ -22,6 +22,9 @@ public class EquipmentMapper {
      * @return Le DTO correspondant à la donnée en entrée
      */
     public static EquipmentRequestDTO toDto(EquipmentRequest request) {
+        if (request == null) {
+            return null;
+        }
         return EquipmentRequestDTO.builder()
             .id(request.getId())
             .title(request.getTitle())
@@ -29,15 +32,31 @@ public class EquipmentMapper {
             .status(request.getStatus())
             .duration(request.getDuration())
             .description(request.getDescription())
-            .organizationId(request.getOrganization().getId())
-            .organizationName(request.getOrganization().getName())
-            .eventDates(request.getEquipmentRequestDates().stream()
-                .map(d -> d.getId().getEventDate().toString())
-                .collect(Collectors.toList()))
+            .organizationId(request.getOrganization() != null ? request.getOrganization().getId() : null)
+            .organizationName(request.getOrganization() != null ? request.getOrganization().getName() : null)
+            .eventDates(request.getEquipmentRequestDates() != null ? request.getEquipmentRequestDates().stream()
+                .map(d -> d.getId().getEventDate())
+                .collect(Collectors.toList()) : List.of())
+            .createdAt(request.getCreatedAt())
             .build();
     }
 
     public static List<EquipmentRequestDTO> toDto(List<EquipmentRequest> requests){
         return requests.stream().map(EquipmentMapper::toDto).toList();
+    }
+
+    public static EquipmentRequest toEntity(EquipmentRequestDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        return EquipmentRequest.builder()
+            .id(dto.getId())
+            .title(dto.getTitle())
+            .equipmentName(dto.getEquipmentName())
+            .duration(dto.getDuration())
+            .description(dto.getDescription())
+            .status(dto.getStatus())
+            .createdAt(dto.getCreatedAt())
+            .build();
     }
 }

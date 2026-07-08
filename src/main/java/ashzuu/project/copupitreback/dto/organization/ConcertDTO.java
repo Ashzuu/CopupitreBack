@@ -1,8 +1,10 @@
 package ashzuu.project.copupitreback.dto.organization;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
@@ -14,13 +16,15 @@ import java.time.Instant;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ConcertDTO {
     @JsonProperty()
     private Long id;
     @JsonProperty()
     private String title;
     @JsonProperty()
-    private Instant date;
+    private Instant eventDate;
     @JsonProperty()
     private String location;
     @JsonProperty()

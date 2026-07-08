@@ -1,8 +1,10 @@
 package ashzuu.project.copupitreback.dto.organization;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO représentant un besoin annuel en instrumentistes pour une saison.
@@ -13,13 +15,15 @@ import lombok.Data;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AnnualNeedDTO {
     @JsonProperty()
     private Long id;
     @JsonProperty()
     private String instrument;
     @JsonProperty()
-    private Integer count;
+    private Integer requiredCount;
     @JsonProperty()
     private String description;
 }

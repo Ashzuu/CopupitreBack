@@ -1,8 +1,10 @@
 package ashzuu.project.copupitreback.dto.reinforcement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
@@ -14,6 +16,8 @@ import java.time.Instant;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReinforcementResponseDTO {
     @JsonProperty()
     private Long id;

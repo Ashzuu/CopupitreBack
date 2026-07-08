@@ -2,8 +2,7 @@ package ashzuu.project.copupitreback.jpa.entities;
 
 import ashzuu.project.copupitreback.jpa.entities.organization.Organization;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -17,6 +16,9 @@ import org.hibernate.annotations.OnDeleteAction;
 @Entity
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name="annual_needs", schema = "main")
 public class AnnualNeeds {
     @Id

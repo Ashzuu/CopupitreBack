@@ -2,8 +2,7 @@ package ashzuu.project.copupitreback.jpa.entities.equipment;
 
 import ashzuu.project.copupitreback.jpa.entities.organization.Organization;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -25,6 +24,9 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "equipment_requests", schema = "main")
 public class EquipmentRequest {
     @Id
@@ -58,7 +60,7 @@ public class EquipmentRequest {
     private Instant createdAt;
 
     @NonNull
-    @OneToMany(mappedBy = "request")
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EquipmentRequestDate> equipmentRequestDates = new ArrayList<EquipmentRequestDate>();
 
 

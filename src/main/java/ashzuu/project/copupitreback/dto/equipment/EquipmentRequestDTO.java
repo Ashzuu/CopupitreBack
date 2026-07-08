@@ -1,8 +1,12 @@
 package ashzuu.project.copupitreback.dto.equipment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -14,6 +18,8 @@ import java.util.List;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class EquipmentRequestDTO {
     @JsonProperty()
     private Long id;
@@ -28,9 +34,11 @@ public class EquipmentRequestDTO {
     @JsonProperty()
     private String duration;
     @JsonProperty()
-    private List<String> eventDates;
+    private List<LocalDate> eventDates;
     @JsonProperty()
     private String status;
     @JsonProperty()
     private String description;
+    @JsonProperty()
+    private Instant createdAt;
 }

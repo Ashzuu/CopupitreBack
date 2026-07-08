@@ -10,27 +10,49 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Service pour gérer les opérations liées aux utilisateurs.
+ * Service gérant la logique métier liée aux utilisateurs.
  * <p>
- * Rôle : Fournit des méthodes pour interagir avec les données des utilisateurs, en utilisant le {@link UserRepository} pour accéder à la base de données.
- * <p>
- * Méthodes principales :
- * - {@link #getAll()}: Récupère tous les utilisateurs de la base de données.
- * <p>
- * Liens : Utilise {@link UserRepository} pour les opérations CRUD sur l'entité {@link User}.
+ * Ce service fournit des méthodes pour interagir avec les données des utilisateurs,
+ * en utilisant le {@link UserRepository} pour accéder à la base de données.
+ * </p>
  */
 @Service
 public class UserService {
+
+    /**
+     * Dépôt permettant de communiquer avec la table des utilisateurs en base de données.
+     */
     private final UserRepository repo;
 
+    /**
+     * Constructeur pour injecter les dépendances requises.
+     *
+     * @param repo le dépôt des utilisateurs
+     */
     public UserService(UserRepository repo){
         this.repo = repo;
     }
 
+    /**
+     * Récupère l'ensemble des utilisateurs de l'application sous forme de DTO.
+     *
+     * @return la liste de tous les utilisateurs sous forme de {@link UserDTO}
+     */
     public List<UserDTO> getAll(){
         return UserMapper.toDto(repo.findAll());
     }
 
+    /**
+     * Récupère un utilisateur spécifique à partir de son nom d'utilisateur.
+     * <p>
+     * Cette méthode recherche l'utilisateur en base de données et renvoie son DTO
+     * s'il est trouvé. Sinon, elle lève une exception.
+     * </p>
+     *
+     * @param username le nom d'utilisateur recherché
+     * @return les informations de l'utilisateur sous forme de {@link UserDTO}
+     * @throws RuntimeException si aucun utilisateur avec ce nom d'utilisateur n'est trouvé
+     */
     public UserDTO getByUsername(String username){
         Optional<User> user = this.repo.findByUsername(username);
         if(user.isEmpty()){

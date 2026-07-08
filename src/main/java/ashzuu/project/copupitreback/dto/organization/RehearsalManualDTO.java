@@ -1,8 +1,10 @@
 package ashzuu.project.copupitreback.dto.organization;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -15,11 +17,13 @@ import java.time.LocalTime;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RehearsalManualDTO {
     @JsonProperty()
     private Long id;
     @JsonProperty()
-    private LocalDate date;
+    private LocalDate manualDate;
     @JsonProperty()
     private LocalTime startTime;
     @JsonProperty()

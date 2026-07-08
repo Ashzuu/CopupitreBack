@@ -1,10 +1,13 @@
 package ashzuu.project.copupitreback.dto.organization;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import ashzuu.project.copupitreback.dto.equipment.EquipmentRequestDTO;
+import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementAnnouncementDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -16,6 +19,8 @@ import java.util.List;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrganizationDTO {
     @JsonProperty()
     private Long id;
@@ -24,11 +29,21 @@ public class OrganizationDTO {
     @JsonProperty()
     private String city;
     @JsonProperty()
+    private String formationType;
+    @JsonProperty()
     private String description;
     @JsonProperty()
     private String concertDress;
     @JsonProperty()
+    private String logisticsInfo;
+    @JsonProperty()
     private Integer musicianCount;
+    @JsonProperty()
+    private String rehearsalAddress;
+    @JsonProperty()
+    private String rehearsalSchedule;
+    @JsonProperty()
+    private Instant createdAt;
     @JsonProperty()
     private List<RehearsalScheduleDTO> rehearsalSchedules;
     @JsonProperty()
@@ -39,4 +54,8 @@ public class OrganizationDTO {
     private List<AnnualNeedDTO> annualNeeds;
     @JsonProperty()
     private List<RehearsalManualDTO> rehearsalManuals;
+    @JsonProperty()
+    private List<EquipmentRequestDTO> equipmentRequests;
+    @JsonProperty()
+    private List<ReinforcementAnnouncementDTO> reinforcementRequests;
 }

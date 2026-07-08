@@ -19,19 +19,43 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 /**
- * <h1>AuthService</h1>
- * <p><strong>Ce que fait la nouvelle classe :</strong> Service gérant la logique métier de l'authentification (connexion et inscription).</p>
- * <p><strong>Dans quel but elle a été créée :</strong> Centraliser la logique de hachage de mot de passe, de création d'utilisateur, de vérification des identifiants et de génération de token JWT.</p>
- * <p><strong>À quoi celle-ci est-elle liée :</strong> Elle utilise UserRepository, PasswordEncoder, AuthenticationManager, et JwtUtil. Elle est appelée par AuthController.</p>
+ * Service gérant la logique métier de l'authentification (connexion et inscription).
+ * <p>
+ * Ce service centralise la logique de hachage de mot de passe, de création d'utilisateur,
+ * de vérification des identifiants et de génération de token JWT.
+ * </p>
  */
 @Service
 public class AuthService {
 
+    /**
+     * Dépôt permettant de communiquer avec la table des utilisateurs en base de données.
+     */
     private final UserRepository userRepository;
+
+    /**
+     * Encodeur de mots de passe pour sécuriser les mots de passe des utilisateurs en base de données.
+     */
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Utilitaire de gestion des tokens JWT (génération, validation).
+     */
     private final JwtUtil jwtUtil;
+
+    /**
+     * Gestionnaire d'authentification de Spring Security pour valider les identifiants de connexion.
+     */
     private final AuthenticationManager authenticationManager;
 
+    /**
+     * Constructeur pour injecter les dépendances requises.
+     *
+     * @param userRepository        le dépôt des utilisateurs
+     * @param passwordEncoder       l'encodeur de mots de passe
+     * @param jwtUtil               l'utilitaire JWT
+     * @param authenticationManager le gestionnaire d'authentification
+     */
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
@@ -40,6 +64,18 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
     }
 
+    /**
+     * Enregistre un nouvel utilisateur dans le système.
+     * <p>
+     * Cette méthode vérifie d'abord que le nom d'utilisateur et l'adresse email ne sont pas déjà pris,
+     * crée ensuite l'entité {@link User} avec le mot de passe haché, la sauvegarde en base de données,
+     * et génère enfin un jeton JWT pour connecter automatiquement l'utilisateur nouvellement inscrit.
+     * </p>
+     *
+     * @param request les informations d'inscription fournies par le client
+     * @return un objet {@link AuthResponse} contenant le jeton JWT généré et les détails de l'utilisateur
+     * @throws RuntimeException si le nom d'utilisateur ou l'adresse email est déjà utilisé
+     */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -79,13 +115,24 @@ public class AuthService {
             .build();
     }
 
+    /**
+     * Authentifie un utilisateur existant avec ses identifiants de connexion.
+     * <p>
+     * Cette méthode utilise {@link AuthenticationManager} de Spring Security pour valider
+     * la combinaison nom d'utilisateur / mot de passe, puis récupère l'utilisateur depuis
+     * la base de données afin de générer un jeton JWT.
+     * </p>
+     *
+     * @param request les identifiants de connexion (nom d'utilisateur et mot de passe)
+     * @return un objet {@link AuthResponse} contenant le jeton JWT généré et les détails de l'utilisateur authentifié
+     * @throws RuntimeException si l'utilisateur n'est pas trouvé ou si l'authentification échoue
+     */
     public AuthResponse login(LoginRequest request) {
-        // Todo : Corriger le fait de pouvoir se connecter aussi par email !
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
