@@ -69,30 +69,37 @@ public class Organization {
 
     @NonNull
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<AnnualNeeds> annualNeeds = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Concert> concerts = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<EquipmentRequest> equipmentRequests = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<OrganizationAdmin> organizationAdmins = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<RehearsalManual> rehearsalManuals = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<RehearsalSchedule> rehearsalSchedules = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ReinforcementRequest> reinforcementRequests = new ArrayList<>();
 
     public void addConcert(Concert concert){

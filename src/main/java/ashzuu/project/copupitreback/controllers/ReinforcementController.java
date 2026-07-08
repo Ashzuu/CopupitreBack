@@ -5,6 +5,7 @@ import ashzuu.project.copupitreback.jpa.repositories.ReinforcementRepository;
 import ashzuu.project.copupitreback.mapper.ReinforcementMapper;
 import ashzuu.project.copupitreback.services.ReinforcementService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,7 +52,9 @@ public class ReinforcementController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<ReinforcementAnnouncementDTO> saveAnnouncement(@RequestBody ReinforcementAnnouncementDTO dto) {
-        return ResponseEntity.ok(this.service.saveAnnouncement(dto));
+    public ResponseEntity<ReinforcementAnnouncementDTO> saveAnnouncement(
+            @AuthenticationPrincipal ashzuu.project.copupitreback.security.UserDetailsImpl userDetails,
+            @RequestBody ReinforcementAnnouncementDTO dto) {
+        return ResponseEntity.ok(this.service.saveAnnouncement(dto, userDetails));
     }
 }

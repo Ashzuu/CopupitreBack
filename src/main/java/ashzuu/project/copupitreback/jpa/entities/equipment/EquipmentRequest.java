@@ -61,6 +61,7 @@ public class EquipmentRequest {
 
     @NonNull
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<EquipmentRequestDate> equipmentRequestDates = new ArrayList<EquipmentRequestDate>();
 
 

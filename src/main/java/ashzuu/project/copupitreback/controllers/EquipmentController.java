@@ -47,8 +47,10 @@ public class EquipmentController {
                 .body(this.service.getAllRequests());
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<EquipmentRequestDTO> saveRequest(@RequestBody EquipmentRequestDTO dto) {
-        return ResponseEntity.ok(this.service.saveRequest(dto));
+    @org.springframework.web.bind.annotation.PostMapping("/save")
+    public ResponseEntity<EquipmentRequestDTO> saveRequest(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal ashzuu.project.copupitreback.security.UserDetailsImpl userDetails,
+            @org.springframework.web.bind.annotation.RequestBody EquipmentRequestDTO dto) {
+        return ResponseEntity.ok(this.service.saveRequest(dto, userDetails));
     }
 }

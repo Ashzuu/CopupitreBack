@@ -66,18 +66,22 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     @ColumnDefault("'USER'")
+    @Builder.Default
     private Role role = Role.USER;
 
     @NonNull
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     private List<Application> applications = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     private List<OrganizationAdmin> organizationAdmins = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     private List<UserSecondaryInstrument> userSecondaryInstruments = new ArrayList<>();
 
 

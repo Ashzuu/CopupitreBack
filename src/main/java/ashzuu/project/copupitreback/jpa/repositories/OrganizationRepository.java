@@ -14,4 +14,10 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
         where admin.user.id = :id
         """)
     List<Organization> getAllByUserId(@Param("id") Long id);
+
+    @Query("""
+        select count(admin) > 0 from OrganizationAdmin admin
+        where admin.user.id = :userId and admin.organization.id = :orgId
+        """)
+    boolean isAdminOfOrganization(@Param("userId") Long userId, @Param("orgId") Long orgId);
 }

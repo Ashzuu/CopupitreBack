@@ -72,5 +72,6 @@ public class ReinforcementRequest {
 
     @NonNull
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Application> applications = new ArrayList<>();
 }

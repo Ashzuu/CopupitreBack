@@ -67,17 +67,37 @@ public class EquipmentService {
      * @return la demande d'équipement enregistrée sous forme de DTO
      */
     @Transactional
-    public EquipmentRequestDTO saveRequest(EquipmentRequestDTO dto) {
+    public EquipmentRequestDTO saveRequest(EquipmentRequestDTO dto, ashzuu.project.copupitreback.security.UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Utilisateur non authentifié");
+        }
+
         EquipmentRequest request;
         Organization organization = null;
-        if (dto.getOrganizationId() != null) {
-            organization = orgRepo.findById(dto.getOrganizationId())
-                    .orElseThrow(() -> new UnknownID("Organisation inconnue"));
-        }
 
         if (dto.getId() != null) {
             request = repo.findById(dto.getId())
                     .orElseThrow(() -> new UnknownID("Demande d'équipement inconnue"));
+
+            // Verify admin rights on current organization
+            if (request.getOrganization() != null) {
+                if (!orgRepo.isAdminOfOrganization(userDetails.getId(), request.getOrganization().getId())) {
+                    throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de l'organisation");
+                }
+            }
+
+            // If changing organization, verify admin rights on new one
+            if (dto.getOrganizationId() != null && (request.getOrganization() == null || !dto.getOrganizationId().equals(request.getOrganization().getId()))) {
+                if (!orgRepo.isAdminOfOrganization(userDetails.getId(), dto.getOrganizationId())) {
+                    throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de la nouvelle organisation");
+                }
+            }
+
+            if (dto.getOrganizationId() != null) {
+                organization = orgRepo.findById(dto.getOrganizationId())
+                        .orElseThrow(() -> new UnknownID("Organisation inconnue"));
+            }
+
             request.setTitle(dto.getTitle());
             request.setEquipmentName(dto.getEquipmentName());
             request.setDuration(dto.getDuration());
@@ -89,6 +109,19 @@ public class EquipmentService {
 
             updateRequestDates(request, dto.getEventDates());
         } else {
+            // New request - check admin rights on organizationId
+            if (dto.getOrganizationId() == null) {
+                throw new IllegalArgumentException("L'identifiant de l'organisation est obligatoire pour créer une demande");
+            }
+            if (!orgRepo.isAdminOfOrganization(userDetails.getId(), dto.getOrganizationId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
+            }
+
+            if (dto.getOrganizationId() != null) {
+                organization = orgRepo.findById(dto.getOrganizationId())
+                        .orElseThrow(() -> new UnknownID("Organisation inconnue"));
+            }
+
             request = EquipmentMapper.toEntity(dto);
             if (organization != null) {
                 request.setOrganization(organization);

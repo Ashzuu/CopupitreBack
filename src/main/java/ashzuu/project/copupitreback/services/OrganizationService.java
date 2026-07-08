@@ -122,6 +122,9 @@ public class OrganizationService {
     public OrganizationDTO save(OrganizationDTO dto, UserDetailsImpl userDetails) {
         Organization organization;
         if (dto.getId() != null) {
+            if (userDetails == null || !repo.isAdminOfOrganization(userDetails.getId(), dto.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
+            }
             // Update existing organization
             organization = repo.findById(dto.getId())
                     .orElseThrow(() -> new UnknownID("Organisation inconnue"));

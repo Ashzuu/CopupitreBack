@@ -1,7 +1,9 @@
 package ashzuu.project.copupitreback.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * <h1>LoginRequest</h1>
@@ -10,6 +12,8 @@ import lombok.Data;
  * <p><strong>À quoi celle-ci est-elle liée :</strong> Elle est utilisée par AuthController.</p>
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class LoginRequest {
     @NotBlank(message = "Le nom d'utilisateur est requis")
     private String username;
