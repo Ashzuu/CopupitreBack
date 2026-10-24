@@ -38,7 +38,7 @@ class OrganizationMapperTest {
                 .createdAt(Instant.now())
                 .build();
 
-        User user = User.builder().firstName("John").lastName("Doe").build();
+        User user = User.builder().id(1L).username("johndoe").firstName("John").lastName("Doe").build();
         OrganizationAdmin admin = new OrganizationAdmin();
         admin.setUser(user);
         admin.setOrganization(org);
@@ -99,7 +99,9 @@ class OrganizationMapperTest {
         assertEquals(org.getCreatedAt(), dto.getCreatedAt());
 
         assertEquals(1, dto.getAdminUsernames().size());
-        assertEquals("John Doe", dto.getAdminUsernames().get(0));
+        assertEquals("johndoe", dto.getAdminUsernames().get(0));
+        assertEquals(1, dto.getAdminDisplayNames().size());
+        assertEquals("John Doe", dto.getAdminDisplayNames().get(0));
 
         assertEquals(1, dto.getConcerts().size());
         assertEquals("Winter Concert", dto.getConcerts().get(0).getTitle());
@@ -138,6 +140,18 @@ class OrganizationMapperTest {
     @Test
     void testToStringAdminListNull() {
         assertTrue(OrganizationMapper.toStringAdmin((List<OrganizationAdmin>) null).isEmpty());
+    }
+
+    @Test
+    void testToAdminUsernamesAndDisplayNamesNull() {
+        assertTrue(OrganizationMapper.toAdminUsernames((List<OrganizationAdmin>) null).isEmpty());
+        assertTrue(OrganizationMapper.toAdminDisplayNames((List<OrganizationAdmin>) null).isEmpty());
+        assertEquals("", OrganizationMapper.toAdminUsername(null));
+        assertEquals("", OrganizationMapper.toAdminDisplayName(null));
+
+        OrganizationAdmin adminNoUser = new OrganizationAdmin();
+        assertEquals("", OrganizationMapper.toAdminUsername(adminNoUser));
+        assertEquals("", OrganizationMapper.toAdminDisplayName(adminNoUser));
     }
 
     @Test

@@ -1,8 +1,7 @@
 package ashzuu.project.copupitreback.jpa.entities.user;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -16,6 +15,9 @@ import org.hibernate.annotations.OnDeleteAction;
  */
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "user_secondary_instruments", schema = "main")
 public class UserSecondaryInstrument {
@@ -27,6 +29,4 @@ public class UserSecondaryInstrument {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-
 }

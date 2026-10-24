@@ -1,23 +1,18 @@
 package ashzuu.project.copupitreback.controllers;
 
+import ashzuu.project.copupitreback.dto.user.UpdateProfileRequest;
 import ashzuu.project.copupitreback.dto.user.UserDTO;
-import ashzuu.project.copupitreback.jpa.entities.organization.Organization;
 import ashzuu.project.copupitreback.security.UserDetailsImpl;
 import ashzuu.project.copupitreback.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Contrôleur REST exposant les points d'accès (endpoints) pour la gestion des utilisateurs.
  * <p>
- * Ce contrôleur permet notamment à un utilisateur connecté de récupérer ses propres informations de profil.
+ * Ce contrôleur permet à un utilisateur connecté de récupérer ou mettre à jour ses propres informations de profil.
  * </p>
  */
 @RestController
@@ -56,5 +51,24 @@ public class UserController {
         }
 
         return ResponseEntity.ok(this.service.getByUsername(userDetails.getUsername()));
+    }
+
+    /**
+     * Point d'accès pour mettre à jour les informations de profil de l'utilisateur actuellement connecté.
+     *
+     * @param userDetails les détails de l'utilisateur actuellement authentifié
+     * @param request     les nouvelles données de profil validées
+     * @return une {@link ResponseEntity} contenant le {@link UserDTO} mis à jour avec un code HTTP 200 (OK),
+     *         ou une réponse 401 (Unauthorized) si aucun utilisateur n'est authentifié dans la session
+     */
+    @PutMapping("/me")
+    public ResponseEntity<UserDTO> updateProfile(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody UpdateProfileRequest request){
+        if(userDetails == null){
+            return ResponseEntity.status(401).build();
+        }
+
+        return ResponseEntity.ok(this.service.updateProfile(userDetails.getUsername(), request));
     }
 }

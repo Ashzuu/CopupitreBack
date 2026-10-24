@@ -15,6 +15,8 @@ import ashzuu.project.copupitreback.mapper.EquipmentMapper;
 import ashzuu.project.copupitreback.mapper.OrganizationMapper;
 import ashzuu.project.copupitreback.mapper.ReinforcementMapper;
 import ashzuu.project.copupitreback.security.UserDetailsImpl;
+import ashzuu.project.copupitreback.services.email.EmailService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,7 @@ import java.util.Optional;
  * Service gérant la logique métier liée aux organisations.
  * <p>
  * Ce service permet de gérer, lister et récupérer les informations relatives aux organisations (associations, orchestres, etc.)
- * ainsi que les annonces et demandes d'équipements qui y sont associées.
+ * ainsi que les plannings, concerts, besoins de recrutement, administrateurs et demandes associées.
  * </p>
  */
 @Service
@@ -44,14 +46,21 @@ public class OrganizationService {
     private final UserRepository userRepository;
 
     /**
+     * Service de notification email.
+     */
+    private final EmailService emailService;
+
+    /**
      * Constructeur pour injecter les dépendances requises.
      *
-     * @param repo le dépôt des organisations
+     * @param repo           le dépôt des organisations
      * @param userRepository le dépôt des utilisateurs
+     * @param emailService   le service d'envoi d'emails
      */
-    public OrganizationService(OrganizationRepository repo, UserRepository userRepository){
+    public OrganizationService(OrganizationRepository repo, UserRepository userRepository, EmailService emailService) {
         this.repo = repo;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     /**
@@ -59,13 +68,13 @@ public class OrganizationService {
      *
      * @return la liste de toutes les organisations sous forme de {@link OrganizationDTO}
      */
-    public List<OrganizationDTO> getAll(){
+    public List<OrganizationDTO> getAll() {
         return OrganizationMapper.toDto(this.repo.findAll());
     }
 
-    public OrganizationDTO getById(String id){
+    public OrganizationDTO getById(String id) {
         Optional<Organization> org = this.repo.findById(Long.parseLong(id));
-        if(org.isEmpty()){
+        if (org.isEmpty()) {
             throw new UnknownID("L'organisation recherchée est inconnue");
         }
         return OrganizationMapper.toDto(org.get());
@@ -73,15 +82,11 @@ public class OrganizationService {
 
     /**
      * Récupère les organisations associées à un utilisateur spécifique.
-     * <p>
-     * Cette méthode identifie l'utilisateur à partir de ses détails de connexion (session)
-     * et récupère la liste des organisations dans lesquelles il est impliqué.
-     * </p>
      *
      * @param details les détails de l'utilisateur connecté contenant son identifiant
      * @return la liste des organisations associées à cet utilisateur sous forme de {@link OrganizationDTO}
      */
-    public List<OrganizationDTO> getOrganizationFromUser(UserDetailsImpl details){
+    public List<OrganizationDTO> getOrganizationFromUser(UserDetailsImpl details) {
         return OrganizationMapper.toDto(this.repo.getAllByUserId(details.getId()));
     }
 
@@ -91,7 +96,7 @@ public class OrganizationService {
      * @param id l'identifiant unique de l'organisation
      * @return la liste des annonces de renfort liées à l'organisation
      */
-    public List<ReinforcementAnnouncementDTO> getAnnouncementsOnOrganization(String id){
+    public List<ReinforcementAnnouncementDTO> getAnnouncementsOnOrganization(String id) {
         Optional<Organization> org = this.repo.findById(Long.parseLong(id));
         if (org.isEmpty()) {
             throw new UnknownID("L'organisation recherchée est inconnue");
@@ -105,7 +110,7 @@ public class OrganizationService {
      * @param id l'identifiant unique de l'organisation
      * @return la liste des demandes d'équipements liées à l'organisation
      */
-    public List<EquipmentRequestDTO> getEquipmentRequestOnOrganization(String id){
+    public List<EquipmentRequestDTO> getEquipmentRequestOnOrganization(String id) {
         Optional<Organization> org = this.repo.findById(Long.parseLong(id));
         if (org.isEmpty()) {
             throw new UnknownID("L'organisation recherchée est inconnue");
@@ -114,7 +119,7 @@ public class OrganizationService {
     }
 
     @Transactional
-    public void createOrganization(UserDetailsImpl details, OrganizationDTO org){
+    public void createOrganization(UserDetailsImpl details, OrganizationDTO org) {
         save(org, details);
     }
 
@@ -123,7 +128,7 @@ public class OrganizationService {
         Organization organization;
         if (dto.getId() != null) {
             if (userDetails == null || !repo.isAdminOfOrganization(userDetails.getId(), dto.getId())) {
-                throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
+                throw new AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
             }
             // Update existing organization
             organization = repo.findById(dto.getId())
@@ -162,6 +167,105 @@ public class OrganizationService {
         }
 
         Organization saved = repo.save(organization);
+
+        // Envoyer la notification email lors de la création d'une nouvelle organisation
+        if (dto.getId() == null && userDetails != null) {
+            userRepository.findById(userDetails.getId()).ifPresent(user -> {
+                if (user.getEmail() != null) {
+                    emailService.sendOrganizationCreatedNotification(user.getEmail(), saved.getName());
+                }
+            });
+        }
+
+        return OrganizationMapper.toDto(saved);
+    }
+
+    /**
+     * Ajoute un nouvel administrateur à une organisation existante.
+     *
+     * @param orgId       l'identifiant de l'organisation
+     * @param username    le nom d'utilisateur ou email du futur administrateur
+     * @param userDetails l'utilisateur actuellement connecté effectuant l'action
+     * @return le DTO de l'organisation mis à jour
+     */
+    @Transactional
+    public OrganizationDTO addAdmin(Long orgId, String username, UserDetailsImpl userDetails) {
+        if (userDetails == null || !repo.isAdminOfOrganization(userDetails.getId(), orgId)) {
+            throw new AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
+        }
+
+        Organization org = repo.findById(orgId)
+                .orElseThrow(() -> new UnknownID("Organisation non trouvée avec l'identifiant : " + orgId));
+
+        User targetUser = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(username))
+                .orElseThrow(() -> new UnknownID("Utilisateur introuvable avec le pseudo ou l'email : " + username));
+
+        boolean alreadyAdmin = org.getOrganizationAdmins().stream()
+                .anyMatch(a -> a.getUser() != null && a.getUser().getId().equals(targetUser.getId()));
+        if (alreadyAdmin) {
+            throw new IllegalArgumentException("L'utilisateur est déjà administrateur de cette organisation");
+        }
+
+        OrganizationAdmin admin = new OrganizationAdmin();
+        OrganizationAdminId adminId = new OrganizationAdminId();
+        adminId.setUserId(targetUser.getId());
+        adminId.setOrganizationId(org.getId());
+        admin.setId(adminId);
+        admin.setUser(targetUser);
+        admin.setOrganization(org);
+        admin.setAddedAt(Instant.now());
+
+        org.getOrganizationAdmins().add(admin);
+        Organization saved = repo.save(org);
+
+        if (targetUser.getEmail() != null) {
+            emailService.sendAdminPromotedNotification(targetUser.getEmail(), org.getName(), userDetails.getUsername());
+        }
+
+        return OrganizationMapper.toDto(saved);
+    }
+
+    /**
+     * Supprime un administrateur d'une organisation existante.
+     *
+     * @param orgId       l'identifiant de l'organisation
+     * @param username    le pseudo ou email de l'administrateur à retirer
+     * @param userDetails l'utilisateur actuellement connecté effectuant l'action
+     * @return le DTO de l'organisation mis à jour
+     */
+    @Transactional
+    public OrganizationDTO removeAdmin(Long orgId, String username, UserDetailsImpl userDetails) {
+        if (userDetails == null || !repo.isAdminOfOrganization(userDetails.getId(), orgId)) {
+            throw new AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
+        }
+
+        Organization org = repo.findById(orgId)
+                .orElseThrow(() -> new UnknownID("Organisation non trouvée avec l'identifiant : " + orgId));
+
+        User targetUser = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(username))
+                .orElseThrow(() -> new UnknownID("Utilisateur introuvable avec le pseudo ou l'email : " + username));
+
+        if (targetUser.getId().equals(userDetails.getId()) ||
+            targetUser.getUsername().equalsIgnoreCase(userDetails.getUsername())) {
+            throw new IllegalArgumentException("Vous ne pouvez pas vous retirer vous-même des administrateurs de l'organisation");
+        }
+
+        if (org.getOrganizationAdmins().size() <= 1) {
+            throw new IllegalStateException("Impossible de supprimer le dernier administrateur de l'organisation");
+        }
+
+        boolean removed = org.getOrganizationAdmins().removeIf(a ->
+                (a.getUser() != null && a.getUser().getId().equals(targetUser.getId())) ||
+                (a.getId() != null && a.getId().getUserId() != null && a.getId().getUserId().equals(targetUser.getId()))
+        );
+
+        if (!removed) {
+            throw new UnknownID("L'utilisateur n'est pas administrateur de cette organisation");
+        }
+
+        Organization saved = repo.save(org);
         return OrganizationMapper.toDto(saved);
     }
 
@@ -193,17 +297,19 @@ public class OrganizationService {
         List<AnnualNeeds> current = org.getAnnualNeeds();
         current.removeIf(n -> n.getId() != null && dtos.stream().noneMatch(d -> d.getId() != null && d.getId().equals(n.getId())));
         for (AnnualNeedDTO dto : dtos) {
+            Integer count = dto.getRequiredCount() != null ? dto.getRequiredCount() : dto.getCount();
             if (dto.getId() != null) {
                 current.stream()
                         .filter(n -> n.getId().equals(dto.getId()))
                         .findFirst()
                         .ifPresent(n -> {
                             n.setInstrument(dto.getInstrument());
-                            n.setRequiredCount(dto.getRequiredCount());
+                            n.setRequiredCount(count != null ? count : 0);
                             n.setDescription(dto.getDescription());
                         });
             } else {
                 AnnualNeeds newNeed = OrganizationMapper.toEntity(dto);
+                newNeed.setRequiredCount(count != null ? count : 0);
                 newNeed.setOrganization(org);
                 current.add(newNeed);
             }

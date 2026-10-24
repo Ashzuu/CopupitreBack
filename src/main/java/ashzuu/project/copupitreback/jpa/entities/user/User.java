@@ -9,9 +9,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Entité principale représentant un utilisateur de la plateforme (un musicien).
@@ -80,9 +78,7 @@ public class User {
     private List<OrganizationAdmin> organizationAdmins = new ArrayList<>();
 
     @NonNull
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<UserSecondaryInstrument> userSecondaryInstruments = new ArrayList<>();
-
-
 }

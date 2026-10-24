@@ -33,7 +33,8 @@ public class OrganizationMapper {
                 .rehearsalAddress(organization.getRehearsalAddress())
                 .rehearsalSchedule(organization.getRehearsalSchedule())
                 .createdAt(organization.getCreatedAt())
-                .adminUsernames(toStringAdmin(organization.getOrganizationAdmins()))
+                .adminUsernames(toAdminUsernames(organization.getOrganizationAdmins()))
+                .adminDisplayNames(toAdminDisplayNames(organization.getOrganizationAdmins()))
                 .rehearsalManuals(organization.getRehearsalManuals() != null ?
                         organization.getRehearsalManuals().stream().map(OrganizationMapper::toDto).toList() : new ArrayList<>())
                 .rehearsalSchedules(organization.getRehearsalSchedules() != null ?
@@ -53,18 +54,50 @@ public class OrganizationMapper {
         return organizations.stream().map(OrganizationMapper::toDto).toList();
     }
 
-    public static String toStringAdmin(OrganizationAdmin admin){
-        if (admin == null || admin.getUser() == null) {
+    public static String toAdminUsername(OrganizationAdmin admin) {
+        if (admin == null || admin.getUser() == null || admin.getUser().getUsername() == null) {
             return "";
         }
-        return admin.getUser().getFirstName() + " " + admin.getUser().getLastName();
+        return admin.getUser().getUsername();
     }
 
-    public static List<String> toStringAdmin(List<OrganizationAdmin> admins){
+    public static List<String> toAdminUsernames(List<OrganizationAdmin> admins) {
         if (admins == null) {
             return new ArrayList<>();
         }
-        return admins.stream().map(OrganizationMapper::toStringAdmin).toList();
+        return admins.stream()
+                .map(OrganizationMapper::toAdminUsername)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
+    public static String toAdminDisplayName(OrganizationAdmin admin) {
+        if (admin == null || admin.getUser() == null) {
+            return "";
+        }
+        String first = admin.getUser().getFirstName() != null ? admin.getUser().getFirstName() : "";
+        String last = admin.getUser().getLastName() != null ? admin.getUser().getLastName() : "";
+        return (first + " " + last).trim();
+    }
+
+    public static List<String> toAdminDisplayNames(List<OrganizationAdmin> admins) {
+        if (admins == null) {
+            return new ArrayList<>();
+        }
+        return admins.stream()
+                .map(OrganizationMapper::toAdminDisplayName)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
+    @Deprecated
+    public static String toStringAdmin(OrganizationAdmin admin){
+        return toAdminDisplayName(admin);
+    }
+
+    @Deprecated
+    public static List<String> toStringAdmin(List<OrganizationAdmin> admins){
+        return toAdminDisplayNames(admins);
     }
 
     public static Organization toEntity(OrganizationDTO dto) {
@@ -155,10 +188,11 @@ public class OrganizationMapper {
         if (dto == null) {
             return null;
         }
+        Integer count = dto.getRequiredCount() != null ? dto.getRequiredCount() : dto.getCount();
         return AnnualNeeds.builder()
                 .id(dto.getId())
                 .instrument(dto.getInstrument())
-                .requiredCount(dto.getRequiredCount())
+                .requiredCount(count != null ? count : 0)
                 .description(dto.getDescription())
                 .build();
     }

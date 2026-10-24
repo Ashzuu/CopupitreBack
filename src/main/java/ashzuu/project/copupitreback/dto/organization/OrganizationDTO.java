@@ -49,6 +49,8 @@ public class OrganizationDTO {
     @JsonProperty()
     private List<String> adminUsernames;
     @JsonProperty()
+    private List<String> adminDisplayNames;
+    @JsonProperty()
     private List<ConcertDTO> concerts;
     @JsonProperty()
     private List<AnnualNeedDTO> annualNeeds;

@@ -2,8 +2,11 @@ package ashzuu.project.copupitreback.mapper;
 
 import ashzuu.project.copupitreback.dto.user.UserDTO;
 import ashzuu.project.copupitreback.jpa.entities.user.User;
+import ashzuu.project.copupitreback.jpa.entities.user.UserSecondaryInstrument;
+import ashzuu.project.copupitreback.jpa.entities.user.UserSecondaryInstrumentId;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +35,44 @@ class UserMapperTest {
         assertEquals(user.getMainInstrument(), dto.getMainInstrument());
         assertEquals(user.getMusicalDescription(), dto.getMusicalDescription());
         assertEquals(user.getYearsOfPractice(), dto.getYearsOfPractice());
+        assertNotNull(dto.getSecondaryInstruments());
+        assertTrue(dto.getSecondaryInstruments().isEmpty());
+    }
+
+    @Test
+    void testToDtoWithSecondaryInstruments() {
+        User user = User.builder()
+                .id(1L)
+                .username("john_doe")
+                .firstName("John")
+                .lastName("Doe")
+                .mainInstrument("Trumpet")
+                .userSecondaryInstruments(new ArrayList<>())
+                .build();
+
+        UserSecondaryInstrument usi1 = UserSecondaryInstrument.builder()
+                .id(new UserSecondaryInstrumentId(1L, "Piano"))
+                .user(user)
+                .build();
+        UserSecondaryInstrument usi2 = UserSecondaryInstrument.builder()
+                .id(new UserSecondaryInstrumentId(1L, "Flute"))
+                .user(user)
+                .build();
+
+        user.getUserSecondaryInstruments().add(usi1);
+        user.getUserSecondaryInstruments().add(usi2);
+
+        UserDTO dto = UserMapper.toDto(user);
+
+        assertNotNull(dto);
+        assertEquals(2, dto.getSecondaryInstruments().size());
+        assertTrue(dto.getSecondaryInstruments().contains("Piano"));
+        assertTrue(dto.getSecondaryInstruments().contains("Flute"));
+    }
+
+    @Test
+    void testToDtoNull() {
+        assertNull(UserMapper.toDto((User) null));
     }
 
     @Test

@@ -9,6 +9,7 @@ import ashzuu.project.copupitreback.jpa.repositories.UserRepository;
 import ashzuu.project.copupitreback.security.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -76,6 +77,7 @@ class AuthServiceTest {
         when(userRepository.existsByUsername("user")).thenReturn(false);
         when(userRepository.existsByEmail("user@test.com")).thenReturn(false);
         when(passwordEncoder.encode("pass")).thenReturn("encodedPass");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtUtil.generateToken(any(UserDetails.class))).thenReturn("fakeToken");
 
         AuthResponse resp = authService.register(req);
@@ -84,7 +86,47 @@ class AuthServiceTest {
         assertEquals("fakeToken", resp.getToken());
         assertEquals("user", resp.getUsername());
         assertEquals("USER", resp.getRole());
-        verify(userRepository).save(any(User.class));
+        verify(userRepository, atLeastOnce()).save(any(User.class));
+    }
+
+    @Test
+    void testRegisterWithSecondaryInstruments() {
+        RegisterRequest req = new RegisterRequest();
+        req.setUsername("user_instruments");
+        req.setEmail("inst@test.com");
+        req.setPassword("password123");
+        req.setFirstName("Jean");
+        req.setLastName("Dupont");
+        req.setMainInstrument("Violon");
+        req.setSecondaryInstruments("Alto, Violoncelle,  Piano ");
+
+        when(userRepository.existsByUsername("user_instruments")).thenReturn(false);
+        when(userRepository.existsByEmail("inst@test.com")).thenReturn(false);
+        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User u = invocation.getArgument(0);
+            if (u.getId() == null) {
+                u.setId(42L);
+            }
+            return u;
+        });
+        when(jwtUtil.generateToken(any(UserDetails.class))).thenReturn("jwtToken");
+
+        AuthResponse resp = authService.register(req);
+
+        assertNotNull(resp);
+        assertEquals("jwtToken", resp.getToken());
+        assertEquals("user_instruments", resp.getUsername());
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, times(2)).save(userCaptor.capture());
+
+        User lastSavedUser = userCaptor.getAllValues().get(1);
+        assertNotNull(lastSavedUser.getUserSecondaryInstruments());
+        assertEquals(3, lastSavedUser.getUserSecondaryInstruments().size());
+        assertEquals("Alto", lastSavedUser.getUserSecondaryInstruments().get(0).getId().getInstrument());
+        assertEquals("Violoncelle", lastSavedUser.getUserSecondaryInstruments().get(1).getId().getInstrument());
+        assertEquals("Piano", lastSavedUser.getUserSecondaryInstruments().get(2).getId().getInstrument());
     }
 
     @Test

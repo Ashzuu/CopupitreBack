@@ -1,13 +1,20 @@
 package ashzuu.project.copupitreback.services;
 
+import ashzuu.project.copupitreback.dto.user.UpdateProfileRequest;
 import ashzuu.project.copupitreback.dto.user.UserDTO;
 import ashzuu.project.copupitreback.jpa.entities.user.User;
+import ashzuu.project.copupitreback.jpa.entities.user.UserSecondaryInstrument;
+import ashzuu.project.copupitreback.jpa.entities.user.UserSecondaryInstrumentId;
 import ashzuu.project.copupitreback.jpa.repositories.UserRepository;
 import ashzuu.project.copupitreback.mapper.UserMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service gérant la logique métier liée aux utilisateurs.
@@ -59,5 +66,50 @@ public class UserService {
             throw new RuntimeException("Username inconnu");
         }
         return UserMapper.toDto(user.get());
+    }
+
+    /**
+     * Met à jour les informations de profil de l'utilisateur connecté.
+     *
+     * @param username le nom d'utilisateur de l'utilisateur connecté
+     * @param request  les nouvelles informations du profil
+     * @return les informations mises à jour sous forme de {@link UserDTO}
+     * @throws RuntimeException si l'utilisateur n'est pas trouvé
+     */
+    @Transactional
+    public UserDTO updateProfile(String username, UpdateProfileRequest request) {
+        User user = this.repo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Username inconnu"));
+
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setMainInstrument(request.getMainInstrument());
+        user.setMusicalDescription(request.getMusicalDescription());
+        user.setYearsOfPractice(request.getYearsOfPractice());
+
+        if (user.getUserSecondaryInstruments() == null) {
+            user.setUserSecondaryInstruments(new ArrayList<>());
+        } else {
+            user.getUserSecondaryInstruments().clear();
+        }
+
+        if (request.getSecondaryInstruments() != null) {
+            List<UserSecondaryInstrument> secondaryList = request.getSecondaryInstruments().stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .distinct()
+                    .map(instrumentName -> {
+                        UserSecondaryInstrument usi = new UserSecondaryInstrument();
+                        usi.setId(new UserSecondaryInstrumentId(user.getId(), instrumentName));
+                        usi.setUser(user);
+                        return usi;
+                    })
+                    .collect(Collectors.toCollection(ArrayList::new));
+            user.getUserSecondaryInstruments().addAll(secondaryList);
+        }
+
+        User updated = this.repo.save(user);
+        return UserMapper.toDto(updated);
     }
 }

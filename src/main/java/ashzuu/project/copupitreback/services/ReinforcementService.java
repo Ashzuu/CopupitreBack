@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service gérant la logique métier liée aux demandes et annonces de renfort.
@@ -188,17 +189,29 @@ public class ReinforcementService {
         // Mettre à jour les existantes et ajouter les nouvelles
         for (ReinforcementResponseDTO dto : dtos) {
             if (dto.getId() != null) {
-                current.stream()
-                        .filter(a -> a.getId().equals(dto.getId()))
-                        .findFirst()
-                        .ifPresent(a -> {
-                            a.setStatus(dto.getStatus());
-                            a.setAppliedAt(dto.getRespondedAt());
-                            if (dto.getRespondentUsername() != null) {
-                                userRepo.findByUsername(dto.getRespondentUsername())
-                                        .ifPresent(a::setUser);
-                            }
-                        });
+                Optional<Application> existing = current.stream()
+                        .filter(a -> a.getId() != null && a.getId().equals(dto.getId()))
+                        .findFirst();
+                if (existing.isPresent()) {
+                    Application a = existing.get();
+                    a.setStatus(dto.getStatus());
+                    a.setAppliedAt(dto.getRespondedAt());
+                    if (dto.getRespondentUsername() != null) {
+                        userRepo.findByUsername(dto.getRespondentUsername())
+                                .ifPresent(a::setUser);
+                    }
+                } else {
+                    Application newApp = ReinforcementMapper.toEntity(dto);
+                    newApp.setRequest(request);
+                    if (dto.getRespondentUsername() != null) {
+                        userRepo.findByUsername(dto.getRespondentUsername())
+                                .ifPresent(newApp::setUser);
+                    }
+                    if (newApp.getAppliedAt() == null) {
+                        newApp.setAppliedAt(Instant.now());
+                    }
+                    current.add(newApp);
+                }
             } else {
                 Application newApp = ReinforcementMapper.toEntity(dto);
                 newApp.setRequest(request);

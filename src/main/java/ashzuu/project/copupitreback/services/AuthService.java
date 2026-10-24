@@ -5,6 +5,8 @@ import ashzuu.project.copupitreback.dto.auth.LoginRequest;
 import ashzuu.project.copupitreback.dto.auth.RegisterRequest;
 import ashzuu.project.copupitreback.jpa.entities.user.Role;
 import ashzuu.project.copupitreback.jpa.entities.user.User;
+import ashzuu.project.copupitreback.jpa.entities.user.UserSecondaryInstrument;
+import ashzuu.project.copupitreback.jpa.entities.user.UserSecondaryInstrumentId;
 import ashzuu.project.copupitreback.jpa.repositories.UserRepository;
 import ashzuu.project.copupitreback.security.JwtUtil;
 import ashzuu.project.copupitreback.security.UserDetailsImpl;
@@ -16,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service gérant la logique métier de l'authentification (connexion et inscription).
@@ -69,6 +73,7 @@ public class AuthService {
      * <p>
      * Cette méthode vérifie d'abord que le nom d'utilisateur et l'adresse email ne sont pas déjà pris,
      * crée ensuite l'entité {@link User} avec le mot de passe haché, la sauvegarde en base de données,
+     * associe les instruments secondaires éventuels,
      * et génère enfin un jeton JWT pour connecter automatiquement l'utilisateur nouvellement inscrit.
      * </p>
      *
@@ -103,15 +108,32 @@ public class AuthService {
                 .userSecondaryInstruments(new ArrayList<>())
                 .build();
 
-        userRepository.save(user);
+        final User savedUser = userRepository.save(user);
+        User finalUser = savedUser;
 
-        UserDetailsImpl userDetails = new UserDetailsImpl(user);
+        if (request.getSecondaryInstruments() != null && !request.getSecondaryInstruments().isBlank()) {
+            List<UserSecondaryInstrument> secondaryList = Arrays.stream(request.getSecondaryInstruments().split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .distinct()
+                    .map(instrumentName -> {
+                        UserSecondaryInstrument usi = new UserSecondaryInstrument();
+                        usi.setId(new UserSecondaryInstrumentId(savedUser.getId(), instrumentName));
+                        usi.setUser(savedUser);
+                        return usi;
+                    })
+                    .collect(Collectors.toCollection(ArrayList::new));
+            savedUser.getUserSecondaryInstruments().addAll(secondaryList);
+            finalUser = userRepository.save(savedUser);
+        }
+
+        UserDetailsImpl userDetails = new UserDetailsImpl(finalUser);
         String token = jwtUtil.generateToken(userDetails);
 
         return AuthResponse.builder()
             .token(token)
-            .username(user.getUsername())
-            .role(user.getRole().name())
+            .username(finalUser.getUsername())
+            .role(finalUser.getRole().name())
             .build();
     }
 

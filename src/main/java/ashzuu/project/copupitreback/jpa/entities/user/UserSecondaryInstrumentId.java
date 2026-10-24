@@ -2,7 +2,7 @@ package ashzuu.project.copupitreback.jpa.entities.user;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,6 +16,9 @@ import java.io.Serializable;
 @Getter
 @Setter
 @EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Embeddable
 public class UserSecondaryInstrumentId implements Serializable {
     private static final long serialVersionUID = 6900069100173031373L;

@@ -1,20 +1,19 @@
 package ashzuu.project.copupitreback.controllers;
 
 import ashzuu.project.copupitreback.dto.equipment.EquipmentRequestDTO;
+import ashzuu.project.copupitreback.dto.organization.AddAdminRequest;
 import ashzuu.project.copupitreback.dto.organization.OrganizationDTO;
 import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementAnnouncementDTO;
 import ashzuu.project.copupitreback.security.UserDetailsImpl;
 import ashzuu.project.copupitreback.services.OrganizationService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-@Controller
+@RestController
 @RequestMapping("/organizations")
 public class OrganizationController {
     private final OrganizationService service;
@@ -59,5 +58,43 @@ public class OrganizationController {
             return ResponseEntity.status(401).build();
         }
         return ResponseEntity.ok(this.service.save(org, userDetails));
+    }
+
+    /**
+     * Ajoute un nouvel administrateur à l'organisation (US-ORG-08).
+     *
+     * @param id          l'identifiant de l'organisation
+     * @param request     la requête contenant le pseudo de l'utilisateur à ajouter
+     * @param userDetails l'utilisateur actuellement connecté
+     * @return l'organisation mise à jour
+     */
+    @PostMapping("/{id}/admins")
+    public ResponseEntity<OrganizationDTO> addAdmin(
+            @PathVariable Long id,
+            @Valid @RequestBody AddAdminRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(this.service.addAdmin(id, request.getUsername(), userDetails));
+    }
+
+    /**
+     * Supprime un administrateur de l'organisation (US-ORG-08).
+     *
+     * @param id          l'identifiant de l'organisation
+     * @param username    le pseudo de l'administrateur à retirer
+     * @param userDetails l'utilisateur actuellement connecté
+     * @return l'organisation mise à jour
+     */
+    @DeleteMapping("/{id}/admins/{username:.+}")
+    public ResponseEntity<OrganizationDTO> removeAdmin(
+            @PathVariable Long id,
+            @PathVariable String username,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(this.service.removeAdmin(id, username, userDetails));
     }
 }
