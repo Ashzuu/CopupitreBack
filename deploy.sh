@@ -51,6 +51,16 @@ else
     log_success "Fichier d'environnement .env détecté."
 fi
 
+# Chargement et validation de base du fichier .env
+source .env 2>/dev/null || true
+if [ "${DB_HOST:-}" = "localhost" ] || [ "${DB_HOST:-}" = "127.0.0.1" ]; then
+    log_warn "=========================================================================="
+    log_warn "ATTENTION : DB_HOST est configuré sur '${DB_HOST}' dans votre fichier .env !"
+    log_warn "Dans un conteneur Docker, 'localhost' correspond au conteneur lui-même."
+    log_warn "Pour joindre PostgreSQL sur l'hôte, utilisez : DB_HOST=host.docker.internal"
+    log_warn "=========================================================================="
+fi
+
 # 2. Vérification des prérequis Docker et Docker Compose
 if ! command -v docker &> /dev/null; then
     log_error "Docker n'est pas installé sur cette machine."
