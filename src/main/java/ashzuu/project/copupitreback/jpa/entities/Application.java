@@ -14,10 +14,7 @@ import java.time.Instant;
  * <p>
  * Rôle : Fait le pont entre un utilisateur (qui postule) et une annonce de renfort (le besoin d'un orchestre).
  * Elle gère l'état d'avancement de la réponse (PENDING, ACCEPTED, REJECTED).
- * <p>
- * Liens : 
- * - ManyToOne avec {@link ReinforcementRequest} (l'annonce visée).
- * - ManyToOne avec {@link ashzuu.project.copupitreback.jpa.entities.user.User} (le musicien postulant).
+ * </p>
  */
 @Getter
 @Setter
@@ -50,5 +47,6 @@ public class Application {
     @Column(name = "applied_at")
     private Instant appliedAt;
 
-
+    @Column(name = "message", length = 1000)
+    private String message;
 }

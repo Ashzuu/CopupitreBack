@@ -18,24 +18,45 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnknownID.class)
     public ResponseEntity<Map<String, String>> handleUnknownID(UnknownID ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+        String msg = ex.getMessage() != null ? ex.getMessage() : "Ressource introuvable";
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", msg,
+                "message", msg
+        ));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", ex.getMessage()));
+        String msg = ex.getMessage() != null ? ex.getMessage() : "Accès refusé";
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "error", msg,
+                "message", msg
+        ));
     }
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<Map<String, String>> handleBadRequest(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+        String msg = ex.getMessage() != null ? ex.getMessage() : "Requête invalide";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", msg,
+                "message", msg
+        ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
+        StringBuilder combinedMessage = new StringBuilder();
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+            if (!combinedMessage.isEmpty()) {
+                combinedMessage.append(", ");
+            }
+            combinedMessage.append(error.getField()).append(": ").append(error.getDefaultMessage());
+        });
+        String msg = combinedMessage.toString();
+        errors.put("error", msg);
+        errors.put("message", msg);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 }

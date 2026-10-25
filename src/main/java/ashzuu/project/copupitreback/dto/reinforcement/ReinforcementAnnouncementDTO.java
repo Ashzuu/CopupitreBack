@@ -1,5 +1,6 @@
 package ashzuu.project.copupitreback.dto.reinforcement;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,45 +10,77 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * DTO représentant une annonce de recherche de renfort pour un concert spécifique.
- * <p>
- * But : Transférer les informations d'une annonce ponctuelle (l'instrument manquant, le nombre requis et le nombre déjà validé) pour l'affichage sur la plateforme.
- * <p>
- * Liens : Mappé depuis l'entité {@link ashzuu.project.copupitreback.jpa.entities.ReinforcementRequest} et contient une liste de {@link ReinforcementResponseDTO}.
+ * DTO représentant une annonce de recherche de renfort pour un concert ou projet spécifique.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReinforcementAnnouncementDTO {
-    @JsonProperty()
+    @JsonProperty("id")
     private Long id;
-    @JsonProperty()
+
+    @JsonProperty("title")
     private String title;
-    @JsonProperty()
+
+    @JsonProperty("organizationId")
     private Long organizationId;
-    @JsonProperty()
+
+    @JsonProperty("organizationName")
     private String organizationName;
-    @JsonProperty()
+
+    @JsonProperty("instrumentNeeded")
     private String instrumentNeeded;
-    @JsonProperty()
+
+    @JsonProperty("eventDate")
     private Instant eventDate;
-    @JsonProperty()
+
+    @JsonProperty("deadline")
     private Instant deadline;
-    @JsonProperty()
+
+    @JsonProperty("eventLocation")
+    @JsonAlias("location")
     private String eventLocation;
-    @JsonProperty()
+
+    @JsonProperty("repertoireDetails")
     private String repertoireDetails;
-    @JsonProperty()
+
+    @JsonProperty("description")
     private String description;
-    @JsonProperty()
+
+    @JsonProperty("requiredQuantity")
+    @JsonAlias("requiredCount")
     private Integer requiredQuantity;
-    @JsonProperty()
+
+    @JsonProperty("validatedCount")
     private Integer validatedCount;
-    @JsonProperty()
+
+    @JsonProperty("status")
     private String status;
-    @JsonProperty()
+
+    @JsonProperty("createdAt")
     private Instant createdAt;
-    @JsonProperty()
+
+    @JsonProperty("responses")
     private List<ReinforcementResponseDTO> responses;
+
+    @JsonProperty("location")
+    public String getLocation() {
+        return eventLocation;
+    }
+
+    @JsonProperty("location")
+    public void setLocation(String location) {
+        this.eventLocation = location;
+    }
+
+    @JsonProperty("requiredCount")
+    public Integer getRequiredCount() {
+        return requiredQuantity;
+    }
+
+    @JsonProperty("requiredCount")
+    public void setRequiredCount(Integer requiredCount) {
+        this.requiredQuantity = requiredCount;
+    }
 }

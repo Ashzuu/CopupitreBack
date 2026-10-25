@@ -12,6 +12,9 @@ import ashzuu.project.copupitreback.jpa.repositories.OrganizationRepository;
 import ashzuu.project.copupitreback.jpa.repositories.ReinforcementRepository;
 import ashzuu.project.copupitreback.jpa.repositories.UserRepository;
 import ashzuu.project.copupitreback.mapper.ReinforcementMapper;
+import ashzuu.project.copupitreback.security.UserDetailsImpl;
+import ashzuu.project.copupitreback.services.email.EmailService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,95 +25,191 @@ import java.util.Optional;
 
 /**
  * Service gérant la logique métier liée aux demandes et annonces de renfort.
- * <p>
- * Ce service permet de récupérer et gérer les annonces de renfort pour des événements ou orchestres.
- * </p>
  */
 @Service
 public class ReinforcementService {
 
-    /**
-     * Dépôt permettant de communiquer avec la table des renforts en base de données.
-     */
     private final ReinforcementRepository repo;
-
-    /**
-     * Dépôt permettant de communiquer avec la table des organisations en base de données.
-     */
     private final OrganizationRepository orgRepo;
-
-    /**
-     * Dépôt permettant de communiquer avec la table des utilisateurs en base de données.
-     */
     private final UserRepository userRepo;
-
     private final ApplicationRepository applicationRepo;
+    private final EmailService emailService;
 
-    /**
-     * Constructeur pour injecter les dépendances requises.
-     *
-     * @param repo le dépôt des renforts
-     * @param orgRepo le dépôt des organisations
-     * @param userRepo le dépôt des utilisateurs
-     */
     public ReinforcementService(
             ReinforcementRepository repo,
             OrganizationRepository orgRepo,
             UserRepository userRepo,
-            ApplicationRepository applicationRepo){
+            ApplicationRepository applicationRepo,
+            EmailService emailService){
         this.repo = repo;
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
         this.applicationRepo = applicationRepo;
+        this.emailService = emailService;
     }
 
     /**
      * Récupère l'ensemble des annonces de renfort sous forme de DTO.
-     * <p>
-     * Cette méthode interroge la base de données pour récupérer toutes les annonces de renfort existantes,
-     * puis les convertit en DTO en utilisant {@link ReinforcementMapper}.
-     * </p>
-     *
-     * @return la liste de toutes les annonces de renfort sous forme de {@link ReinforcementAnnouncementDTO}
      */
     public List<ReinforcementAnnouncementDTO> getAllAnnouncements(){
         return ReinforcementMapper.toAnnouncementDto(this.repo.findAll());
     }
 
+    /**
+     * Récupère les annonces de renfort des organisations administrées par l'utilisateur connecté.
+     */
+    public List<ReinforcementAnnouncementDTO> getMyReinforcements(UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("Utilisateur non authentifié");
+        }
+        return ReinforcementMapper.toAnnouncementDto(this.repo.findByAdminUserId(userDetails.getId()));
+    }
+
+    /**
+     * Récupère l'ensemble des réponses/candidatures pour une annonce donnée.
+     */
     public List<ReinforcementResponseDTO> getAllResponses(String id){
         return ReinforcementMapper.toResponseDto(this.applicationRepo.findAllByIdRequest(Long.parseLong(id)));
     }
 
     /**
-     * Crée ou met à jour une annonce de renfort et met à jour ses candidatures.
-     *
-     * @param dto l'annonce de renfort sous forme de DTO
-     * @return l'annonce de renfort enregistrée sous forme de DTO
+     * Récupère toutes les candidatures effectuées par l'utilisateur connecté (US-RENF-03).
+     */
+    public List<ReinforcementResponseDTO> getMyApplications(UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("Utilisateur non authentifié");
+        }
+        return ReinforcementMapper.toResponseDto(this.applicationRepo.findByUserId(userDetails.getId()));
+    }
+
+    /**
+     * Permet à un musicien connecté de postuler à une annonce de renfort ouverte (US-RENF-03).
      */
     @Transactional
-    public ReinforcementAnnouncementDTO saveAnnouncement(ReinforcementAnnouncementDTO dto, ashzuu.project.copupitreback.security.UserDetailsImpl userDetails) {
+    public ReinforcementResponseDTO applyToAnnouncement(Long announcementId, UserDetailsImpl userDetails, String message) {
         if (userDetails == null) {
-            throw new org.springframework.security.access.AccessDeniedException("Utilisateur non authentifié");
+            throw new AccessDeniedException("Vous devez être connecté pour postuler");
+        }
+
+        ReinforcementRequest request = repo.findById(announcementId)
+                .orElseThrow(() -> new UnknownID("Demande de renfort inconnue : " + announcementId));
+
+        if (!"OPEN".equalsIgnoreCase(request.getStatus())) {
+            throw new IllegalStateException("Cette annonce n'accepte plus de candidatures (statut: " + request.getStatus() + ")");
+        }
+
+        // Règle : Les administrateurs d'une organisation ne peuvent pas postuler à leurs propres annonces
+        if (request.getOrganization() != null && orgRepo.isAdminOfOrganization(userDetails.getId(), request.getOrganization().getId())) {
+            throw new IllegalArgumentException("Les administrateurs d'une organisation ne peuvent pas postuler à leurs propres annonces de renfort");
+        }
+
+        // Règle RG-RENF-05 : Unicité de candidature
+        if (applicationRepo.existsByRequestIdAndUserId(announcementId, userDetails.getId())) {
+            throw new IllegalArgumentException("Vous avez déjà postulé à cette annonce");
+        }
+
+        User user = userRepo.findById(userDetails.getId())
+                .orElseThrow(() -> new UnknownID("Utilisateur introuvable : " + userDetails.getId()));
+
+        Application application = Application.builder()
+                .request(request)
+                .user(user)
+                .status("PENDING")
+                .appliedAt(Instant.now())
+                .message(message)
+                .build();
+
+        Application saved = applicationRepo.save(application);
+        return ReinforcementMapper.toResponseDto(saved);
+    }
+
+    /**
+     * Permet à l'administrateur d'accepter ou refuser une candidature (US-RENF-04).
+     */
+    @Transactional
+    public ReinforcementResponseDTO updateApplicationStatus(
+            Long announcementId,
+            Long applicationId,
+            String newStatus,
+            UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("Utilisateur non authentifié");
+        }
+
+        ReinforcementRequest request = repo.findById(announcementId)
+                .orElseThrow(() -> new UnknownID("Demande de renfort inconnue : " + announcementId));
+
+        // Vérification des droits administrateur sur l'organisation
+        if (request.getOrganization() == null || !orgRepo.isAdminOfOrganization(userDetails.getId(), request.getOrganization().getId())) {
+            throw new AccessDeniedException("Vous n'êtes pas administrateur de l'organisation émettrice");
+        }
+
+        Application application = applicationRepo.findById(applicationId)
+                .orElseThrow(() -> new UnknownID("Candidature introuvable : " + applicationId));
+
+        if (application.getRequest() == null || !application.getRequest().getId().equals(announcementId)) {
+            throw new IllegalArgumentException("Cette candidature ne correspond pas à l'annonce spécifiée");
+        }
+
+        String normalizedStatus = newStatus != null ? newStatus.trim().toUpperCase() : "";
+        if (!"ACCEPTED".equals(normalizedStatus) && !"REJECTED".equals(normalizedStatus)) {
+            throw new IllegalArgumentException("Le statut doit être ACCEPTED ou REJECTED");
+        }
+
+        application.setStatus(normalizedStatus);
+        Application saved = applicationRepo.save(application);
+
+        // Si la candidature est acceptée, mise à jour de l'objectif (RG-RENF-03 / RG-RENF-04)
+        if ("ACCEPTED".equals(normalizedStatus)) {
+            long acceptedCount = applicationRepo.countByRequestIdAndStatus(announcementId, "ACCEPTED");
+            if (request.getRequiredQuantity() != null && acceptedCount >= request.getRequiredQuantity()) {
+                request.setStatus("OBJECTIVE_MET");
+                repo.save(request);
+            }
+        }
+
+        // Envoi de la notification par courriel (via l'interface EmailService)
+        if (application.getUser() != null && application.getUser().getEmail() != null) {
+            String orgName = request.getOrganization() != null ? request.getOrganization().getName() : "Organisation";
+            emailService.sendApplicationStatusUpdate(
+                    application.getUser().getEmail(),
+                    application.getUser().getUsername(),
+                    normalizedStatus,
+                    orgName
+            );
+        }
+
+        return ReinforcementMapper.toResponseDto(saved);
+    }
+
+    /**
+     * Crée ou met à jour une annonce de renfort et met à jour ses candidatures.
+     */
+    @Transactional
+    public ReinforcementAnnouncementDTO saveAnnouncement(ReinforcementAnnouncementDTO dto, UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("Utilisateur non authentifié");
         }
 
         ReinforcementRequest request;
         Organization organization = null;
+        boolean isNew = (dto.getId() == null);
 
-        if (dto.getId() != null) {
+        if (!isNew) {
             request = repo.findById(dto.getId())
                     .orElseThrow(() -> new UnknownID("Demande de renfort inconnue"));
 
             // Verify admin rights on current organization
             if (request.getOrganization() != null) {
                 if (!orgRepo.isAdminOfOrganization(userDetails.getId(), request.getOrganization().getId())) {
-                    throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de l'organisation");
+                    throw new AccessDeniedException("Vous n'êtes pas administrateur de l'organisation");
                 }
             }
 
             // If changing organization, verify admin rights on new one
             if (dto.getOrganizationId() != null && (request.getOrganization() == null || !dto.getOrganizationId().equals(request.getOrganization().getId()))) {
                 if (!orgRepo.isAdminOfOrganization(userDetails.getId(), dto.getOrganizationId())) {
-                    throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de la nouvelle organisation");
+                    throw new AccessDeniedException("Vous n'êtes pas administrateur de la nouvelle organisation");
                 }
             }
 
@@ -121,9 +220,9 @@ public class ReinforcementService {
 
             request.setTitle(dto.getTitle());
             request.setInstrumentNeeded(dto.getInstrumentNeeded());
-            request.setRequiredQuantity(dto.getRequiredQuantity());
+            request.setRequiredQuantity(dto.getRequiredQuantity() != null ? dto.getRequiredQuantity() : dto.getRequiredCount());
             request.setEventDate(dto.getEventDate());
-            request.setEventLocation(dto.getEventLocation());
+            request.setEventLocation(dto.getEventLocation() != null ? dto.getEventLocation() : dto.getLocation());
             request.setDescription(dto.getDescription());
             request.setDeadline(dto.getDeadline());
             request.setStatus(dto.getStatus());
@@ -139,7 +238,7 @@ public class ReinforcementService {
                 throw new IllegalArgumentException("L'identifiant de l'organisation est obligatoire pour créer une demande");
             }
             if (!orgRepo.isAdminOfOrganization(userDetails.getId(), dto.getOrganizationId())) {
-                throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
+                throw new AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
             }
 
             if (dto.getOrganizationId() != null) {
@@ -176,6 +275,13 @@ public class ReinforcementService {
         }
 
         ReinforcementRequest saved = repo.save(request);
+
+        // Alerte Email lors de la création d'une nouvelle annonce (RG-RENF-09)
+        if (isNew && organization != null) {
+            String orgEmail = organization.getName().toLowerCase().replaceAll("\\s+", "") + "@copupitre.fr";
+            emailService.sendNewAnnouncementAlert(orgEmail, organization.getName(), saved.getTitle());
+        }
+
         return ReinforcementMapper.toAnnouncementDto(saved);
     }
 
@@ -183,10 +289,8 @@ public class ReinforcementService {
         if (dtos == null) return;
         List<Application> current = request.getApplications();
 
-        // Supprimer les candidatures qui ne sont pas dans dtos
         current.removeIf(a -> a.getId() != null && dtos.stream().noneMatch(d -> d.getId() != null && d.getId().equals(a.getId())));
 
-        // Mettre à jour les existantes et ajouter les nouvelles
         for (ReinforcementResponseDTO dto : dtos) {
             if (dto.getId() != null) {
                 Optional<Application> existing = current.stream()
@@ -229,18 +333,19 @@ public class ReinforcementService {
 
     /**
      * Supprime une annonce de renfort si l'utilisateur est administrateur de l'organisation associée.
-     *
-     * @param id l'identifiant de l'annonce à supprimer
-     * @param userDetails les détails de l'utilisateur connecté
      */
     @Transactional
-    public void deleteAnnouncement(Long id, ashzuu.project.copupitreback.security.UserDetailsImpl userDetails) {
+    public void deleteAnnouncement(Long id, UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("Utilisateur non authentifié");
+        }
+
         ReinforcementRequest request = repo.findById(id)
                 .orElseThrow(() -> new UnknownID("Demande de renfort inconnue"));
 
         if (request.getOrganization() != null) {
             if (!orgRepo.isAdminOfOrganization(userDetails.getId(), request.getOrganization().getId())) {
-                throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
+                throw new AccessDeniedException("Vous n'êtes pas administrateur de cette organisation");
             }
         }
 

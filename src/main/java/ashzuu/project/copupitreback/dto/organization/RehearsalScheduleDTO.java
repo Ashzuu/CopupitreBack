@@ -1,5 +1,6 @@
 package ashzuu.project.copupitreback.dto.organization;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,8 +25,10 @@ public class RehearsalScheduleDTO {
     @JsonProperty()
     private String dayOfWeek;
     @JsonProperty()
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime startTime;
     @JsonProperty()
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime endTime;
     @JsonProperty()
     private String location;

@@ -1,6 +1,9 @@
 package ashzuu.project.copupitreback.controllers;
 
+import ashzuu.project.copupitreback.dto.reinforcement.ApplyRequest;
 import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementAnnouncementDTO;
+import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementResponseDTO;
+import ashzuu.project.copupitreback.dto.reinforcement.UpdateApplicationStatusRequest;
 import ashzuu.project.copupitreback.jpa.entities.user.Role;
 import ashzuu.project.copupitreback.jpa.entities.user.User;
 import ashzuu.project.copupitreback.security.CustomUserDetailsService;
@@ -19,8 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -64,6 +69,20 @@ class ReinforcementControllerTest {
     }
 
     @Test
+    void testGetMyAnnouncements() throws Exception {
+        User userEntity = User.builder().id(1L).username("testuser").role(Role.USER).build();
+        UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
+
+        ReinforcementAnnouncementDTO req = ReinforcementAnnouncementDTO.builder().id(10L).title("My Org Need").build();
+        when(reinforcementService.getMyReinforcements(any())).thenReturn(List.of(req));
+
+        mockMvc.perform(get("/reinforcements/me")
+                .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("My Org Need"));
+    }
+
+    @Test
     void testSaveAnnouncement() throws Exception {
         User userEntity = User.builder().id(1L).username("testuser").role(Role.USER).build();
         UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
@@ -81,5 +100,77 @@ class ReinforcementControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(100))
                 .andExpect(jsonPath("$.title").value("New Req"));
+    }
+
+    @Test
+    void testApplyToAnnouncement() throws Exception {
+        User userEntity = User.builder().id(2L).username("candidat").role(Role.USER).build();
+        UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
+
+        ApplyRequest request = ApplyRequest.builder().message("Dispo avec sax").build();
+        ReinforcementResponseDTO responseDTO = ReinforcementResponseDTO.builder()
+                .id(42L)
+                .announcementId(10L)
+                .respondentUsername("candidat")
+                .status("PENDING")
+                .message("Dispo avec sax")
+                .build();
+
+        when(reinforcementService.applyToAnnouncement(eq(10L), any(), eq("Dispo avec sax"))).thenReturn(responseDTO);
+
+        mockMvc.perform(post("/reinforcements/10/apply")
+                .with(SecurityMockMvcRequestPostProcessors.user(userDetails))
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(42))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.respondentUsername").value("candidat"));
+    }
+
+    @Test
+    void testUpdateApplicationStatus() throws Exception {
+        User userEntity = User.builder().id(1L).username("admin").role(Role.USER).build();
+        UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
+
+        UpdateApplicationStatusRequest request = UpdateApplicationStatusRequest.builder().status("ACCEPTED").build();
+        ReinforcementResponseDTO responseDTO = ReinforcementResponseDTO.builder()
+                .id(42L)
+                .announcementId(10L)
+                .respondentUsername("candidat")
+                .status("ACCEPTED")
+                .build();
+
+        when(reinforcementService.updateApplicationStatus(eq(10L), eq(42L), eq("ACCEPTED"), any())).thenReturn(responseDTO);
+
+        mockMvc.perform(patch("/reinforcements/10/applications/42/status")
+                .with(SecurityMockMvcRequestPostProcessors.user(userDetails))
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACCEPTED"));
+    }
+
+    @Test
+    void testGetMyApplications() throws Exception {
+        User userEntity = User.builder().id(1L).username("testuser").role(Role.USER).build();
+        UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
+
+        ReinforcementResponseDTO resp = ReinforcementResponseDTO.builder()
+                .id(1L)
+                .announcementId(10L)
+                .status("PENDING")
+                .respondentUsername("testuser")
+                .build();
+
+        when(reinforcementService.getMyApplications(any())).thenReturn(List.of(resp));
+
+        mockMvc.perform(get("/reinforcements/my-applications")
+                .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].announcementId").value(10));
     }
 }

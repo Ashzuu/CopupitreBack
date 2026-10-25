@@ -6,6 +6,9 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Entité représentant les besoins annuels en effectifs pour une organisation.
  * <p>
@@ -39,4 +42,8 @@ public class AnnualNeeds {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "organization_id")
     private Organization organization;
+
+    @OneToMany(mappedBy = "annualNeed", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<AnnualNeedApplication> applications = new ArrayList<>();
 }

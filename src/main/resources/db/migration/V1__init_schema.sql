@@ -68,6 +68,15 @@ CREATE TABLE IF NOT EXISTS annual_needs (
     description TEXT
 );
 
+CREATE TABLE IF NOT EXISTS annual_need_applications (
+    id BIGSERIAL PRIMARY KEY,
+    annual_need_id BIGINT REFERENCES annual_needs(id) ON DELETE CASCADE,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    message TEXT
+);
+
 CREATE TABLE IF NOT EXISTS rehearsal_manuals (
     id BIGSERIAL PRIMARY KEY,
     organization_id BIGINT REFERENCES organizations(id) ON DELETE CASCADE,
@@ -97,7 +106,8 @@ CREATE TABLE IF NOT EXISTS applications (
     request_id BIGINT REFERENCES reinforcement_requests(id) ON DELETE CASCADE,
     user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    message TEXT
 );
 
 CREATE TABLE IF NOT EXISTS equipment_requests (

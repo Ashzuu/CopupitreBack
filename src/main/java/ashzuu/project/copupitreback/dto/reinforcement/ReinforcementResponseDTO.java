@@ -9,26 +9,36 @@ import java.time.Instant;
 
 /**
  * DTO représentant la candidature d'un musicien en réponse à une annonce de renfort.
- * <p>
- * But : Fournir au créateur de l'annonce les détails sur les musiciens ayant postulé et l'état actuel de leur candidature.
- * <p>
- * Liens : Mappé depuis l'entité {@link ashzuu.project.copupitreback.jpa.entities.Application} et est rattaché à un {@link ReinforcementAnnouncementDTO}.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReinforcementResponseDTO {
-    @JsonProperty()
+    @JsonProperty("id")
     private Long id;
-    @JsonProperty()
+
+    @JsonProperty("announcementId")
     private Long announcementId;
-    @JsonProperty()
+
+    @JsonProperty("announcementTitle")
     private String announcementTitle;
-    @JsonProperty()
+
+    @JsonProperty("respondentUsername")
     private String respondentUsername;
-    @JsonProperty()
+
+    @JsonProperty("respondentFullName")
+    private String respondentFullName;
+
+    @JsonProperty("respondentInstrument")
+    private String respondentInstrument;
+
+    @JsonProperty("respondedAt")
     private Instant respondedAt;
-    @JsonProperty()
+
+    @JsonProperty("status")
     private String status;
+
+    @JsonProperty("message")
+    private String message;
 }

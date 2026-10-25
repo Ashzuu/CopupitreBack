@@ -11,10 +11,6 @@ import java.util.List;
 
 /**
  * Composant responsable de la conversion entre les annonces de renfort, les candidatures et leurs DTOs respectifs.
- * <p>
- * But : Séparer la logique de comptage (ex: nombre de musiciens validés) et de conversion pour servir une vue prête à l'emploi au front-end.
- * <p>
- * Liens : Manipule {@link ReinforcementRequest} et {@link Application} pour produire {@link ReinforcementAnnouncementDTO} et {@link ReinforcementResponseDTO}.
  */
 public class ReinforcementMapper {
 
@@ -61,9 +57,9 @@ public class ReinforcementMapper {
                 .id(dto.getId())
                 .title(dto.getTitle())
                 .instrumentNeeded(dto.getInstrumentNeeded())
-                .requiredQuantity(dto.getRequiredQuantity())
+                .requiredQuantity(dto.getRequiredQuantity() != null ? dto.getRequiredQuantity() : dto.getRequiredCount())
                 .eventDate(dto.getEventDate())
-                .eventLocation(dto.getEventLocation())
+                .eventLocation(dto.getEventLocation() != null ? dto.getEventLocation() : dto.getLocation())
                 .repertoireDetails(dto.getRepertoireDetails())
                 .description(dto.getDescription())
                 .deadline(dto.getDeadline())
@@ -77,13 +73,31 @@ public class ReinforcementMapper {
         if (app == null) {
             return null;
         }
+
+        String fullName = null;
+        String instrument = null;
+        String username = null;
+        if (app.getUser() != null) {
+            username = app.getUser().getUsername();
+            String first = app.getUser().getFirstName() != null ? app.getUser().getFirstName().trim() : "";
+            String last = app.getUser().getLastName() != null ? app.getUser().getLastName().trim() : "";
+            fullName = (first + " " + last).trim();
+            if (fullName.isEmpty()) {
+                fullName = username;
+            }
+            instrument = app.getUser().getMainInstrument();
+        }
+
         return ReinforcementResponseDTO.builder()
                 .id(app.getId())
                 .announcementId(app.getRequest() != null ? app.getRequest().getId() : null)
                 .announcementTitle(app.getRequest() != null ? app.getRequest().getTitle() : null)
-                .respondentUsername(app.getUser() != null ? app.getUser().getUsername() : null)
+                .respondentUsername(username)
+                .respondentFullName(fullName)
+                .respondentInstrument(instrument)
                 .respondedAt(app.getAppliedAt())
                 .status(app.getStatus())
+                .message(app.getMessage())
                 .build();
     }
 
@@ -99,6 +113,7 @@ public class ReinforcementMapper {
         app.setId(dto.getId());
         app.setStatus(dto.getStatus());
         app.setAppliedAt(dto.getRespondedAt());
+        app.setMessage(dto.getMessage());
         return app;
     }
 }
