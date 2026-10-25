@@ -43,7 +43,7 @@ EXPOSE 8080
 
 # Healthcheck périodique sur le point de contrôle /api/logs
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:40080/api/logs || exit 1
+  CMD curl -f http://localhost:8080/api/logs || exit 1
 
 # Démarrage via entrypoint qui ajuste les droits des volumes et bascule vers appuser
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
