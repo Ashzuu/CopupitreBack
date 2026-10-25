@@ -1,23 +1,4 @@
 services:
-  copupitre-db:
-    image: postgres:16-alpine
-    container_name: copupitre-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-copupitre}
-      POSTGRES_USER: ${DB_USER:-copupitre}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-copupitre}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-copupitre} -d $${POSTGRES_DB:-copupitre}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - copupitre-net
-
   copupitre-back:
     build:
       context: .
@@ -26,12 +7,14 @@ services:
     restart: unless-stopped
     ports:
       - "${BACKEND_PORT:-40080}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      DB_HOST: copupitre-db
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-5432}
       DB_NAME: ${DB_NAME:-copupitre}
-      DB_USER: ${DB_USER:-copupitre}
-      DB_PASSWORD: ${DB_PASSWORD:-copupitre}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-admin}
       DB_SCHEMA: ${DB_SCHEMA:-main}
       JWT_SECRET: ${JWT_SECRET:-defaultSecretKeyThatIsVeryLongAndSecureEnoughForHS256AlgorithmToBeValid123!}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
@@ -39,15 +22,8 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200,http://localhost:40000,http://localhost:4000,http://localhost}
     volumes:
       - ./logs:/app/logs
-    depends_on:
-      copupitre-db:
-        condition: service_healthy
     networks:
       - copupitre-net
-
-volumes:
-  postgres_data:
-    name: copupitre_postgres_data
 
 networks:
   copupitre-net:

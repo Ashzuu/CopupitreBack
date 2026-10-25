@@ -38,11 +38,11 @@ USER appuser
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
 
 # Port d'écoute du serveur Spring Boot
-EXPOSE 40080
+EXPOSE 8080
 
 # Healthcheck périodique sur le point de contrôle /api/logs
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:40080/api/logs || exit 1
+  CMD curl -f http://localhost:8080/api/logs || exit 1
 
 # Démarrage de l'application Spring Boot
 ENTRYPOINT ["java", "-jar", "app.jar"]

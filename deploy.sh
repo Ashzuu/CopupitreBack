@@ -42,7 +42,7 @@ if [ ! -f ".env" ]; then
     if [ -f ".env.example" ]; then
         log_info "Création automatique du fichier .env à partir de .env.example..."
         cp .env.example .env
-        log_warn "Un fichier .env par défaut a été créé. Pensez à ajuster les secrets (JWT_SECRET, DB_PASSWORD) en production !"
+        log_warn "Un fichier .env par défaut a été créé. Pensez à ajuster les paramètres de connexion à PostgreSQL (DB_HOST, DB_USER, DB_PASSWORD, etc.) !"
     else
         log_error "Erreur : .env et .env.example sont introuvables. Arrêt du déploiement."
         exit 1
@@ -85,7 +85,7 @@ log_success "Dossier de logs configuré (./logs)"
 log_info "Construction des images et démarrage des conteneurs via Docker Compose..."
 $COMPOSE_CMD up -d --build --remove-orphans
 
-# 5. Attente active de la santé des conteneurs
+# 5. Attente active de la santé du conteneur Backend
 wait_for_service() {
     local service_name="$1"
     local max_retries="$2"
@@ -99,10 +99,6 @@ wait_for_service() {
         if [ "$status" = "healthy" ]; then
             log_success "Conteneur [${service_name}] est HEALTHY !"
             return 0
-        elif [ "$status" = "running" ] && [ "$service_name" = "copupitre-db" ]; then
-            # Si pas de healthcheck défini sur db mais running
-            log_success "Conteneur [${service_name}] est RUNNING !"
-            return 0
         fi
         count=$((count + 1))
         echo -n "."
@@ -114,10 +110,7 @@ wait_for_service() {
     return 1
 }
 
-# Vérification de PostgreSQL d'abord (max 40s)
-wait_for_service "copupitre-db" 20 2
-
-# Vérification du backend ensuite (max 60s)
+# Vérification du backend (Spring Boot se connecte à la base PostgreSQL existante et applique Flyway)
 wait_for_service "copupitre-back" 30 2
 
 # 6. Validation du point de contrôle HTTP Healthcheck
@@ -143,7 +136,7 @@ echo ""
 echo -e "${BOLD}${GREEN}================================================================${NC}"
 echo -e "${BOLD}${GREEN}   DÉPLOIEMENT COPUPITREBACK EFFECTUÉ AVEC SUCCÈS !             ${NC}"
 echo -e "${BOLD}${GREEN}================================================================${NC}"
-echo -e "   - Base de données : copupitre-db (PostgreSQL 16 Alpine)"
+echo -e "   - Base de données : Externe (${DB_HOST:-host.docker.internal}:${DB_PORT:-5432}/${DB_NAME:-copupitre})"
 echo -e "   - Backend API     : copupitre-back (Spring Boot 4 / Java 21 Temurin)"
 echo -e "   - URL de base API : http://localhost:${PORT}/api"
 echo -e "   - Healthcheck     : http://localhost:${PORT}/api/logs"
