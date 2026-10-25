@@ -16,7 +16,7 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - copupitre-net
+      - copupitre-network
 
   copupitre-back:
     build:
@@ -43,13 +43,13 @@ services:
       copupitre-db:
         condition: service_healthy
     networks:
-      - copupitre-net
+      - copupitre-network
 
 volumes:
   postgres_data:
     name: copupitre_postgres_data
 
 networks:
-  copupitre-net:
+  copupitre-network:
     name: copupitre-network
     driver: bridge
