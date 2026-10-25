@@ -1,33 +1,38 @@
 services:
-  copupitre-back:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: copupitre-back
+  db:
+    image: postgres:16-alpine
+    container_name: copupitre-db
     restart: unless-stopped
-    ports:
-      - "${BACKEND_PORT:-40080}:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     environment:
-      DB_HOST: ${DB_HOST:-host.docker.internal}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-copupitre}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-admin}
-      DB_SCHEMA: ${DB_SCHEMA:-main}
-      JWT_SECRET: ${JWT_SECRET:-defaultSecretKeyThatIsVeryLongAndSecureEnoughForHS256AlgorithmToBeValid123!}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
-      LOG_PATH: /app/logs
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200,http://localhost:40000,http://localhost:4000,http://localhost}
+      POSTGRES_DB: ${DB_NAME:-copupitre}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin}
     volumes:
-      - ./logs:/app/logs
-    networks:
-      - copupitre-network
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-copupitre}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-networks:
-  copupitre-network:
-    name: copupitre-network
-    external: true
+  backend:
+    build: .
+    container_name: copupitre-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-40080}:8080"
+    env_file:
+      - .env
+    environment:
+      # Surcharge DB_HOST pour cibler le conteneur 'db' au sein du réseau Docker
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
