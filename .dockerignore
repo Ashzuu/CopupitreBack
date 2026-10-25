@@ -1,0 +1,32 @@
+# Git & IDEs
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+
+# Build & Dependencies
+target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Logs & Runtime
+logs/
+*.log
+
+# Environment variables & secrets (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# Documentation & AI Assistant context
+.gemini/
+*.md
+
+# Deployment scripts (not needed inside the Java container)
+deploy.sh
+docker-compose.yml
+docker/

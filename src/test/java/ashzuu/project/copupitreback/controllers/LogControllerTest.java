@@ -15,7 +15,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(LogController.class)
@@ -36,6 +38,13 @@ class LogControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Test
+    void testHealthCheck() throws Exception {
+        mockMvc.perform(get("/logs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
 
     @Test
     void testReceiveErrorLogAnonymous() throws Exception {

@@ -8,14 +8,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 /**
  * Contrôleur REST pour centraliser les logs et erreurs applicatives du frontend
  * dans les fichiers de logs côté serveur, évitant ainsi l'exposition par console.error/console.log.
+ * Expose également un point de contrôle santé (Healthcheck HTTP GET) pour Docker et orchestrateurs.
  */
 @RestController
 @RequestMapping("/logs")
@@ -24,6 +28,16 @@ public class LogController {
 
     LogController(LogService logService) {
         this.logService = logService;
+    }
+
+    /**
+     * Endpoint de vérification de santé HTTP (utilisé notamment par Docker HEALTHCHECK).
+     *
+     * @return un statut UP indiquant que le service backend est opérationnel
+     */
+    @GetMapping
+    public ResponseEntity<Map<String, String>> healthCheck() {
+        return ResponseEntity.ok(Map.of("status", "UP"));
     }
 
     @PostMapping
