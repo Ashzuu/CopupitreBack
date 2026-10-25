@@ -1,56 +1,96 @@
 package ashzuu.project.copupitreback.controllers;
 
 import ashzuu.project.copupitreback.dto.equipment.EquipmentRequestDTO;
+import ashzuu.project.copupitreback.dto.equipment.UpdateEquipmentStatusRequest;
+import ashzuu.project.copupitreback.security.UserDetailsImpl;
 import ashzuu.project.copupitreback.services.EquipmentService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 /**
- * Contrôleur REST exposant les points d'accès (endpoints) pour la gestion des équipements.
- * <p>
- * Ce contrôleur gère les requêtes liées aux équipements et à leurs demandes au sein de l'application.
- * </p>
+ * Contrôleur REST exposant les points d'accès (endpoints) pour la gestion du matériel (Epic 04).
  */
 @RestController
 @RequestMapping("/equipments")
 public class EquipmentController {
 
-    /**
-     * Service gérant la logique métier liée aux équipements.
-     */
     private final EquipmentService service;
 
-    /**
-     * Constructeur pour injecter les dépendances requises.
-     *
-     * @param service le service des équipements
-     */
-    EquipmentController(EquipmentService service){
+    public EquipmentController(EquipmentService service) {
         this.service = service;
     }
 
     /**
-     * Point d'accès pour récupérer toutes les demandes d'équipements.
-     * <p>
-     * Cette méthode répond aux requêtes HTTP GET pour lister toutes les demandes d'équipements
-     * enregistrées.
-     * </p>
-     *
-     * @return une {@link ResponseEntity} contenant la liste de toutes les demandes d'équipements sous forme de DTO avec un code HTTP 200 (OK)
+     * Récupère l'ensemble des demandes d'équipements publiques (US-MAT-02).
      */
     @GetMapping("/requests/all")
-    public ResponseEntity<List<EquipmentRequestDTO>> getAll(){
-        return ResponseEntity
-                .status(200)
-                .body(this.service.getAllRequests());
+    public ResponseEntity<List<EquipmentRequestDTO>> getAll() {
+        return ResponseEntity.ok(this.service.getAllRequests());
     }
 
-    @org.springframework.web.bind.annotation.PostMapping("/save")
+    /**
+     * Récupère les demandes de matériel des organisations administrées par l'utilisateur connecté (US-MAT-03).
+     */
+    @GetMapping("/me")
+    public ResponseEntity<List<EquipmentRequestDTO>> getMyRequests(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(this.service.getMyEquipmentRequests(userDetails));
+    }
+
+    /**
+     * Récupère les demandes de matériel pour une organisation spécifique.
+     */
+    @GetMapping("/organization/{orgId}")
+    public ResponseEntity<List<EquipmentRequestDTO>> getRequestsByOrganization(@PathVariable Long orgId) {
+        return ResponseEntity.ok(this.service.getRequestsByOrganization(orgId));
+    }
+
+    /**
+     * Crée ou modifie une demande de matériel (US-MAT-01).
+     */
+    @PostMapping("/save")
     public ResponseEntity<EquipmentRequestDTO> saveRequest(
-            @org.springframework.security.core.annotation.AuthenticationPrincipal ashzuu.project.copupitreback.security.UserDetailsImpl userDetails,
-            @org.springframework.web.bind.annotation.RequestBody EquipmentRequestDTO dto) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody EquipmentRequestDTO dto) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(this.service.saveRequest(dto, userDetails));
+    }
+
+    /**
+     * Met à jour le statut d'une demande de matériel (US-MAT-03 / RG-MAT-04).
+     */
+    @RequestMapping(value = "/{id}/status", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    public ResponseEntity<EquipmentRequestDTO> updateStatus(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody UpdateEquipmentStatusRequest request) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(this.service.updateStatus(id, request.getStatus(), userDetails));
+    }
+
+    /**
+     * Supprime ou clôture une demande de matériel (UC-MAT-05 / US-MAT-03).
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRequest(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        this.service.deleteRequest(id, userDetails);
+        return ResponseEntity.noContent().build();
     }
 }

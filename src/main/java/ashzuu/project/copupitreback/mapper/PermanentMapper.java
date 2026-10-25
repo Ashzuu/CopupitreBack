@@ -6,6 +6,8 @@ import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementResponseDTO;
 import ashzuu.project.copupitreback.jpa.entities.AnnualNeedApplication;
 import ashzuu.project.copupitreback.jpa.entities.AnnualNeeds;
 import ashzuu.project.copupitreback.jpa.entities.organization.Organization;
+import ashzuu.project.copupitreback.jpa.entities.organization.OrganizationAdmin;
+import ashzuu.project.copupitreback.jpa.entities.user.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,33 +82,53 @@ public class PermanentMapper {
             return null;
         }
 
-        String orgName = (app.getAnnualNeed() != null && app.getAnnualNeed().getOrganization() != null)
-                ? app.getAnnualNeed().getOrganization().getName()
-                : "";
-        String inst = (app.getAnnualNeed() != null) ? app.getAnnualNeed().getInstrument() : "";
+        AnnualNeeds need = app.getAnnualNeed();
+        Organization org = need != null ? need.getOrganization() : null;
+
+        String orgName = org != null ? org.getName() : "";
+        Long orgId = org != null ? org.getId() : null;
+        String orgEmail = null;
+        if (org != null && org.getOrganizationAdmins() != null) {
+            for (OrganizationAdmin admin : org.getOrganizationAdmins()) {
+                if (admin.getUser() != null && admin.getUser().getEmail() != null) {
+                    orgEmail = admin.getUser().getEmail();
+                    break;
+                }
+            }
+        }
+
+        String inst = need != null ? need.getInstrument() : "";
         String title = (inst + (orgName.isEmpty() ? "" : " - " + orgName)).trim();
 
         String fullName = null;
         String username = null;
         String userInstrument = null;
+        String email = null;
         if (app.getUser() != null) {
             username = app.getUser().getUsername();
             String first = app.getUser().getFirstName() != null ? app.getUser().getFirstName() : "";
             String last = app.getUser().getLastName() != null ? app.getUser().getLastName() : "";
             fullName = (first + " " + last).trim();
             userInstrument = app.getUser().getMainInstrument();
+            email = app.getUser().getEmail();
         }
 
         return ReinforcementResponseDTO.builder()
                 .id(app.getId())
-                .announcementId(app.getAnnualNeed() != null ? app.getAnnualNeed().getId() : null)
+                .announcementId(need != null ? need.getId() : null)
                 .announcementTitle(title)
                 .respondentUsername(username)
                 .respondentFullName(fullName)
                 .respondentInstrument(userInstrument)
+                .respondentEmail(email)
                 .respondedAt(app.getAppliedAt())
                 .status(app.getStatus())
                 .message(app.getMessage())
+                .organizationId(orgId)
+                .organizationName(orgName)
+                .organizationEmail(orgEmail)
+                .type("PERMANENT")
+                .eventLocation(org != null ? (org.getCity() != null ? org.getCity() : org.getRehearsalAddress()) : null)
                 .build();
     }
 

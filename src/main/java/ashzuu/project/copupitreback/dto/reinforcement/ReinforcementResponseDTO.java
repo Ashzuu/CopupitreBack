@@ -33,6 +33,9 @@ public class ReinforcementResponseDTO {
     @JsonProperty("respondentInstrument")
     private String respondentInstrument;
 
+    @JsonProperty("respondentEmail")
+    private String respondentEmail;
+
     @JsonProperty("respondedAt")
     private Instant respondedAt;
 
@@ -41,4 +44,22 @@ public class ReinforcementResponseDTO {
 
     @JsonProperty("message")
     private String message;
+
+    @JsonProperty("organizationId")
+    private Long organizationId;
+
+    @JsonProperty("organizationName")
+    private String organizationName;
+
+    @JsonProperty("organizationEmail")
+    private String organizationEmail;
+
+    @JsonProperty("type")
+    private String type;
+
+    @JsonProperty("eventDate")
+    private Instant eventDate;
+
+    @JsonProperty("eventLocation")
+    private String eventLocation;
 }

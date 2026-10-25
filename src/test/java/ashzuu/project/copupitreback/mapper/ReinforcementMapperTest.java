@@ -135,8 +135,22 @@ class ReinforcementMapperTest {
 
     @Test
     void testToResponseDto() {
-        ReinforcementRequest req = ReinforcementRequest.builder().id(1L).title("Req Title").build();
-        User user = User.builder().username("jane_doe").build();
+        Organization org = Organization.builder().id(5L).name("Test Orchestra").build();
+        User admin = User.builder().username("admin_user").email("admin@test.org").build();
+        ashzuu.project.copupitreback.jpa.entities.organization.OrganizationAdmin orgAdmin = new ashzuu.project.copupitreback.jpa.entities.organization.OrganizationAdmin();
+        orgAdmin.setUser(admin);
+        orgAdmin.setOrganization(org);
+        org.setOrganizationAdmins(List.of(orgAdmin));
+
+        Instant eventDate = Instant.now().plusSeconds(3600);
+        ReinforcementRequest req = ReinforcementRequest.builder()
+                .id(1L)
+                .title("Req Title")
+                .organization(org)
+                .eventDate(eventDate)
+                .eventLocation("Lyon")
+                .build();
+        User user = User.builder().username("jane_doe").email("jane@example.com").build();
         
         Application app = new Application();
         app.setId(10L);
@@ -152,6 +166,13 @@ class ReinforcementMapperTest {
         assertEquals(1L, dto.getAnnouncementId());
         assertEquals("Req Title", dto.getAnnouncementTitle());
         assertEquals("jane_doe", dto.getRespondentUsername());
+        assertEquals("jane@example.com", dto.getRespondentEmail());
+        assertEquals(5L, dto.getOrganizationId());
+        assertEquals("Test Orchestra", dto.getOrganizationName());
+        assertEquals("admin@test.org", dto.getOrganizationEmail());
+        assertEquals("RENFORT", dto.getType());
+        assertEquals(eventDate, dto.getEventDate());
+        assertEquals("Lyon", dto.getEventLocation());
         assertEquals(app.getAppliedAt(), dto.getRespondedAt());
         assertEquals("ACCEPTED", dto.getStatus());
     }

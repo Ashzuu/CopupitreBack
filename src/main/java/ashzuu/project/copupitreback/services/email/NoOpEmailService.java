@@ -36,4 +36,10 @@ public class NoOpEmailService implements EmailService {
         log.info("[NoOpEmailService] Statut candidature - To: {}, Candidat: {}, Statut: {}, Org: {}",
                 toEmail, candidateName, status, organizationName);
     }
+
+    @Override
+    public void sendEquipmentRequestStatusUpdate(String toEmail, String organizationName, String equipmentName, String status) {
+        log.info("[NoOpEmailService] Statut matériel - To: {}, Org: {}, Matériel: {}, Statut: {}",
+                toEmail, organizationName, equipmentName, status);
+    }
 }

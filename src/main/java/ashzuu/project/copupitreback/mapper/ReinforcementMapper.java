@@ -4,6 +4,9 @@ import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementAnnouncementD
 import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementResponseDTO;
 import ashzuu.project.copupitreback.jpa.entities.Application;
 import ashzuu.project.copupitreback.jpa.entities.ReinforcementRequest;
+import ashzuu.project.copupitreback.jpa.entities.organization.Organization;
+import ashzuu.project.copupitreback.jpa.entities.organization.OrganizationAdmin;
+import ashzuu.project.copupitreback.jpa.entities.user.User;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -77,6 +80,7 @@ public class ReinforcementMapper {
         String fullName = null;
         String instrument = null;
         String username = null;
+        String email = null;
         if (app.getUser() != null) {
             username = app.getUser().getUsername();
             String first = app.getUser().getFirstName() != null ? app.getUser().getFirstName().trim() : "";
@@ -86,18 +90,51 @@ public class ReinforcementMapper {
                 fullName = username;
             }
             instrument = app.getUser().getMainInstrument();
+            email = app.getUser().getEmail();
+        }
+
+        ReinforcementRequest req = app.getRequest();
+        Long orgId = null;
+        String orgName = null;
+        String orgEmail = null;
+        Instant eventDate = null;
+        String eventLocation = null;
+
+        if (req != null) {
+            eventDate = req.getEventDate();
+            eventLocation = req.getEventLocation();
+            if (req.getOrganization() != null) {
+                Organization org = req.getOrganization();
+                orgId = org.getId();
+                orgName = org.getName();
+                if (org.getOrganizationAdmins() != null) {
+                    for (OrganizationAdmin admin : org.getOrganizationAdmins()) {
+                        if (admin.getUser() != null && admin.getUser().getEmail() != null) {
+                            orgEmail = admin.getUser().getEmail();
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         return ReinforcementResponseDTO.builder()
                 .id(app.getId())
-                .announcementId(app.getRequest() != null ? app.getRequest().getId() : null)
-                .announcementTitle(app.getRequest() != null ? app.getRequest().getTitle() : null)
+                .announcementId(req != null ? req.getId() : null)
+                .announcementTitle(req != null ? req.getTitle() : null)
                 .respondentUsername(username)
                 .respondentFullName(fullName)
                 .respondentInstrument(instrument)
+                .respondentEmail(email)
                 .respondedAt(app.getAppliedAt())
                 .status(app.getStatus())
                 .message(app.getMessage())
+                .organizationId(orgId)
+                .organizationName(orgName)
+                .organizationEmail(orgEmail)
+                .type("RENFORT")
+                .eventDate(eventDate)
+                .eventLocation(eventLocation)
                 .build();
     }
 

@@ -20,7 +20,16 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     long countByRequestIdAndStatus(Long requestId, String status);
 
-    List<Application> findByUserId(Long userId);
+    @Query("""
+        select a from Application a
+        left join fetch a.request r
+        left join fetch r.organization o
+        left join fetch o.organizationAdmins oa
+        left join fetch oa.user
+        where a.user.id = :userId
+        order by a.appliedAt desc
+        """)
+    List<Application> findByUserId(@Param("userId") Long userId);
 
     Optional<Application> findByRequestIdAndUserId(Long requestId, Long userId);
 }

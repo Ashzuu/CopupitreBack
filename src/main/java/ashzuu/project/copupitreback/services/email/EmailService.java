@@ -45,4 +45,14 @@ public interface EmailService {
      * @param organizationName nom de l'organisation
      */
     void sendApplicationStatusUpdate(String toEmail, String candidateName, String status, String organizationName);
+
+    /**
+     * Notifie l'évolution du statut d'une demande de prêt de matériel (RG-MAT-04).
+     *
+     * @param toEmail          adresse email du destinataire
+     * @param organizationName nom de l'organisation émettrice
+     * @param equipmentName    nom du matériel concerné
+     * @param status           nouveau statut (OPEN, MET, CLOSED)
+     */
+    void sendEquipmentRequestStatusUpdate(String toEmail, String organizationName, String equipmentName, String status);
 }

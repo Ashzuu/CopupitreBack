@@ -20,7 +20,16 @@ public interface AnnualNeedApplicationRepository extends JpaRepository<AnnualNee
 
     long countByAnnualNeedIdAndStatus(Long annualNeedId, String status);
 
-    List<AnnualNeedApplication> findByUserId(Long userId);
+    @Query("""
+        select a from AnnualNeedApplication a
+        left join fetch a.annualNeed n
+        left join fetch n.organization o
+        left join fetch o.organizationAdmins oa
+        left join fetch oa.user
+        where a.user.id = :userId
+        order by a.appliedAt desc
+        """)
+    List<AnnualNeedApplication> findByUserId(@Param("userId") Long userId);
 
     Optional<AnnualNeedApplication> findByAnnualNeedIdAndUserId(Long annualNeedId, Long userId);
 }

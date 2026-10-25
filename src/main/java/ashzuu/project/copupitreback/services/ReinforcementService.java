@@ -159,11 +159,14 @@ public class ReinforcementService {
         application.setStatus(normalizedStatus);
         Application saved = applicationRepo.save(application);
 
-        // Si la candidature est acceptée, mise à jour de l'objectif (RG-RENF-03 / RG-RENF-04)
-        if ("ACCEPTED".equals(normalizedStatus)) {
-            long acceptedCount = applicationRepo.countByRequestIdAndStatus(announcementId, "ACCEPTED");
-            if (request.getRequiredQuantity() != null && acceptedCount >= request.getRequiredQuantity()) {
+        // Si la candidature est acceptée ou refusée, recalcul de l'objectif (RG-RENF-03 / RG-RENF-04)
+        long acceptedCount = applicationRepo.countByRequestIdAndStatus(announcementId, "ACCEPTED");
+        if (request.getRequiredQuantity() != null) {
+            if (acceptedCount >= request.getRequiredQuantity()) {
                 request.setStatus("OBJECTIVE_MET");
+                repo.save(request);
+            } else if ("OBJECTIVE_MET".equalsIgnoreCase(request.getStatus())) {
+                request.setStatus("OPEN");
                 repo.save(request);
             }
         }
