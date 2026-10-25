@@ -31,5 +31,15 @@ public interface AnnualNeedApplicationRepository extends JpaRepository<AnnualNee
         """)
     List<AnnualNeedApplication> findByUserId(@Param("userId") Long userId);
 
+    @Query("""
+        select a from AnnualNeedApplication a
+        left join fetch a.annualNeed n
+        left join fetch n.organization o
+        left join fetch a.user u
+        where o.id in :orgIds
+        order by a.appliedAt desc
+        """)
+    List<AnnualNeedApplication> findByOrganizationIds(@Param("orgIds") List<Long> orgIds);
+
     Optional<AnnualNeedApplication> findByAnnualNeedIdAndUserId(Long annualNeedId, Long userId);
 }

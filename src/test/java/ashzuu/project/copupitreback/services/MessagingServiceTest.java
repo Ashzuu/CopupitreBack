@@ -163,4 +163,21 @@ class MessagingServiceTest {
         assertNotNull(result);
         assertEquals("Je peux prêter mes timbales", result.getContent());
     }
+
+    @Test
+    void testGetUserConversations() {
+        when(applicationRepo.findByUserId(1L)).thenReturn(List.of(application));
+        when(annualNeedApplicationRepo.findByUserId(1L)).thenReturn(List.of());
+        when(organizationRepo.getAllByUserId(1L)).thenReturn(List.of());
+        when(messageRepo.findDistinctEquipmentContextIdsForUser(1L)).thenReturn(List.of());
+        when(messageRepo.findFirstByContextTypeAndContextIdOrderByCreatedAtDesc("APPLICATION", 30L)).thenReturn(Optional.empty());
+        when(messageRepo.countByContextTypeAndContextId("APPLICATION", 30L)).thenReturn(0L);
+
+        List<ashzuu.project.copupitreback.dto.message.ConversationDTO> convs = service.getUserConversations(userDetails);
+
+        assertNotNull(convs);
+        assertEquals(1, convs.size());
+        assertEquals("APPLICATION_30", convs.get(0).getId());
+        assertEquals("Orchestre Philharmonique", convs.get(0).getOtherPartyName());
+    }
 }

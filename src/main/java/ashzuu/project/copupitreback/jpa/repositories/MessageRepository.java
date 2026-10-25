@@ -13,4 +13,11 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByContextOrderByCreatedAtAsc(
             @Param("contextType") String contextType,
             @Param("contextId") Long contextId);
+
+    java.util.Optional<Message> findFirstByContextTypeAndContextIdOrderByCreatedAtDesc(String contextType, Long contextId);
+
+    long countByContextTypeAndContextId(String contextType, Long contextId);
+
+    @Query("SELECT DISTINCT m.contextId FROM Message m WHERE m.contextType = 'EQUIPMENT' AND m.sender.id = :userId")
+    List<Long> findDistinctEquipmentContextIdsForUser(@Param("userId") Long userId);
 }

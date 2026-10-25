@@ -1,5 +1,6 @@
 package ashzuu.project.copupitreback.controllers;
 
+import ashzuu.project.copupitreback.dto.message.ConversationDTO;
 import ashzuu.project.copupitreback.dto.message.MessageDTO;
 import ashzuu.project.copupitreback.dto.message.SendMessageRequest;
 import ashzuu.project.copupitreback.security.UserDetailsImpl;
@@ -23,6 +24,11 @@ public class MessageController {
 
     public MessageController(MessagingService messagingService) {
         this.messagingService = messagingService;
+    }
+
+    @GetMapping("/conversations")
+    public ResponseEntity<List<ConversationDTO>> getConversations(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(messagingService.getUserConversations(userDetails));
     }
 
     @GetMapping("/{contextType}/{contextId}")

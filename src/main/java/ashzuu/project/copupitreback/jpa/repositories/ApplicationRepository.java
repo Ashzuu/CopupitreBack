@@ -31,5 +31,15 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
         """)
     List<Application> findByUserId(@Param("userId") Long userId);
 
+    @Query("""
+        select a from Application a
+        left join fetch a.request r
+        left join fetch r.organization o
+        left join fetch a.user u
+        where o.id in :orgIds
+        order by a.appliedAt desc
+        """)
+    List<Application> findByOrganizationIds(@Param("orgIds") List<Long> orgIds);
+
     Optional<Application> findByRequestIdAndUserId(Long requestId, Long userId);
 }

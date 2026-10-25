@@ -55,6 +55,29 @@ class MessageControllerTest {
     }
 
     @Test
+    void testGetConversations() throws Exception {
+        ashzuu.project.copupitreback.dto.message.ConversationDTO conv = ashzuu.project.copupitreback.dto.message.ConversationDTO.builder()
+                .id("APPLICATION_15")
+                .contextType("APPLICATION")
+                .contextId(15L)
+                .title("Candidature Trompette")
+                .otherPartyName("Orchestre Philharmonique")
+                .otherPartyRole("Organisation")
+                .lastMessage("Bonjour !")
+                .status("PENDING")
+                .build();
+
+        when(messagingService.getUserConversations(eq(userDetails))).thenReturn(List.of(conv));
+
+        mockMvc.perform(get("/messages/conversations")
+                        .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("APPLICATION_15"))
+                .andExpect(jsonPath("$[0].title").value("Candidature Trompette"))
+                .andExpect(jsonPath("$[0].otherPartyName").value("Orchestre Philharmonique"));
+    }
+
+    @Test
     void testGetMessages() throws Exception {
         MessageDTO dto = MessageDTO.builder()
                 .id(1L)
