@@ -24,7 +24,7 @@ jobs:
           script: |
             set -e
             echo "=== Déploiement de CopupitreBack ==="
-            cd /parts/projects/CopupitreBack
+            cd /repos/persos/CopupitreBack
             git fetch origin main
             git reset --hard origin/main
             chmod +x deploy.sh
