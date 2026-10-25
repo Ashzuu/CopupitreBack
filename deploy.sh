@@ -77,8 +77,8 @@ log_success "Docker Compose détecté : $COMPOSE_CMD"
 
 # 3. Préparation du répertoire de logs sur l'hôte avec permissions d'écriture
 log_info "Préparation du répertoire de logs..."
-mkdir -p logs
-chmod 777 logs
+mkdir -p logs/archived
+chmod -R 777 logs 2>/dev/null || true
 log_success "Dossier de logs configuré (./logs)"
 
 # 4. Assurer l'existence du réseau Docker partagé et lancement des conteneurs

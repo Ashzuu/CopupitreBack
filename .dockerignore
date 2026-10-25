@@ -28,5 +28,6 @@ logs/
 
 # Deployment scripts (not needed inside the Java container)
 deploy.sh
+!docker-entrypoint.sh
 docker-compose.yml
 docker/
