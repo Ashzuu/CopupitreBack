@@ -19,6 +19,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - proxy
 
   backend:
     build: .
@@ -35,6 +37,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - proxy
 
 volumes:
   postgres_data:
+
+networks:
+  proxy:
+    external: true
