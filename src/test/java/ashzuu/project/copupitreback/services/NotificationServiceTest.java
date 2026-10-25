@@ -64,6 +64,31 @@ class NotificationServiceTest {
     }
 
     @Test
+    void testCreateNotificationWithContext() {
+        Notification notif = Notification.builder()
+                .id(101L)
+                .user(user)
+                .type("NEW_MESSAGE")
+                .title("Title")
+                .content("Content")
+                .link("/dashboard")
+                .contextType("APPLICATION")
+                .contextId(42L)
+                .isRead(false)
+                .createdAt(Instant.now())
+                .build();
+
+        when(repo.save(any(Notification.class))).thenReturn(notif);
+
+        Notification result = service.createNotification(user, "NEW_MESSAGE", "Title", "Content", "/dashboard", "APPLICATION", 42L);
+
+        assertNotNull(result);
+        assertEquals("APPLICATION", result.getContextType());
+        assertEquals(42L, result.getContextId());
+        verify(repo).save(any(Notification.class));
+    }
+
+    @Test
     void testGetUserNotifications() {
         Notification notif = Notification.builder()
                 .id(100L)

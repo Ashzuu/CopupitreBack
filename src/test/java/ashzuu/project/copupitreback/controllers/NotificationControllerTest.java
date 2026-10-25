@@ -66,7 +66,8 @@ class NotificationControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(10))
-                .andExpect(jsonPath("$[0].title").value("Nouvelle candidature"));
+                .andExpect(jsonPath("$[0].title").value("Nouvelle candidature"))
+                .andExpect(jsonPath("$[0].isRead").value(false));
     }
 
     @Test

@@ -129,7 +129,9 @@ public class AnnualNeedService {
                         "NEW_APPLICATION",
                         "Nouvelle candidature de musicien permanent",
                         user.getFirstName() + " " + user.getLastName() + " a postulé pour le poste : " + need.getInstrument(),
-                        "/dashboard"
+                        "/dashboard?contextType=ANNUAL_APPLICATION&contextId=" + saved.getId(),
+                        "ANNUAL_APPLICATION",
+                        saved.getId()
                 );
             }
         }
@@ -182,7 +184,9 @@ public class AnnualNeedService {
                     "APPLICATION_STATUS",
                     "Candidature permanente " + statusLabel,
                     "Votre candidature de musicien permanent pour \"" + need.getInstrument() + "\" auprès de " + orgName + " a été " + statusLabel + ".",
-                    "/mes-candidatures"
+                    "/mes-candidatures?contextType=ANNUAL_APPLICATION&contextId=" + application.getId(),
+                    "ANNUAL_APPLICATION",
+                    application.getId()
             );
 
             if (application.getUser().getEmail() != null) {

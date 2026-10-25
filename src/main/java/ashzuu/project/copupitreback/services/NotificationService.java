@@ -24,12 +24,19 @@ public class NotificationService {
 
     @Transactional
     public Notification createNotification(User recipient, String type, String title, String content, String link) {
+        return createNotification(recipient, type, title, content, link, null, null);
+    }
+
+    @Transactional
+    public Notification createNotification(User recipient, String type, String title, String content, String link, String contextType, Long contextId) {
         Notification notification = Notification.builder()
                 .user(recipient)
                 .type(type)
                 .title(title)
                 .content(content)
                 .link(link)
+                .contextType(contextType)
+                .contextId(contextId)
                 .isRead(false)
                 .createdAt(Instant.now())
                 .build();
@@ -49,6 +56,8 @@ public class NotificationService {
                         .title(n.getTitle())
                         .content(n.getContent())
                         .link(n.getLink())
+                        .contextType(n.getContextType())
+                        .contextId(n.getContextId())
                         .isRead(n.isRead())
                         .createdAt(n.getCreatedAt())
                         .build())

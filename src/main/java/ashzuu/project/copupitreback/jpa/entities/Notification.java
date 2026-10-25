@@ -43,6 +43,12 @@ public class Notification {
     @Column(name = "link")
     private String link;
 
+    @Column(name = "context_type", length = 50)
+    private String contextType;
+
+    @Column(name = "context_id")
+    private Long contextId;
+
     @ColumnDefault("false")
     @Column(name = "is_read", nullable = false)
     @Builder.Default

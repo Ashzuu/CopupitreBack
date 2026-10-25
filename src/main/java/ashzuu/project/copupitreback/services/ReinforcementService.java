@@ -151,7 +151,9 @@ public class ReinforcementService {
                         "NEW_APPLICATION",
                         "Nouvelle candidature reçue",
                         user.getFirstName() + " " + user.getLastName() + " a postulé pour : " + request.getTitle(),
-                        "/dashboard"
+                        "/dashboard?contextType=APPLICATION&contextId=" + saved.getId(),
+                        "APPLICATION",
+                        saved.getId()
                 );
             }
         }
@@ -216,7 +218,9 @@ public class ReinforcementService {
                     "APPLICATION_STATUS",
                     "Candidature " + statusLabel,
                     "Votre candidature pour \"" + request.getTitle() + "\" auprès de " + orgName + " a été " + statusLabel + ".",
-                    "/mes-candidatures"
+                    "/mes-candidatures?contextType=APPLICATION&contextId=" + application.getId(),
+                    "APPLICATION",
+                    application.getId()
             );
 
             if (application.getUser().getEmail() != null) {

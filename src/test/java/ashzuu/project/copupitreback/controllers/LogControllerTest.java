@@ -3,6 +3,7 @@ package ashzuu.project.copupitreback.controllers;
 import ashzuu.project.copupitreback.dto.log.ClientLogRequest;
 import ashzuu.project.copupitreback.security.CustomUserDetailsService;
 import ashzuu.project.copupitreback.security.JwtUtil;
+import ashzuu.project.copupitreback.services.LogService;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ class LogControllerTest {
 
     @MockitoBean
     private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private LogService logService;
 
     @MockitoBean
     private CustomUserDetailsService customUserDetailsService;

@@ -123,7 +123,15 @@ class MessagingServiceTest {
         assertNotNull(result);
         assertEquals("Voici mes disponibilités", result.getContent());
         verify(messageRepo).save(any(Message.class));
-        verify(notificationService).createNotification(eq(admin), eq("NEW_MESSAGE"), anyString(), anyString(), eq("/dashboard"));
+        verify(notificationService).createNotification(
+                eq(admin),
+                eq("NEW_MESSAGE"),
+                anyString(),
+                anyString(),
+                eq("/dashboard?contextType=APPLICATION&contextId=30"),
+                eq("APPLICATION"),
+                eq(30L)
+        );
     }
 
     @Test

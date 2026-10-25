@@ -144,7 +144,9 @@ public class MessagingService {
                                     "NEW_MESSAGE",
                                     "Nouveau message de " + senderName,
                                     excerpt,
-                                    "/dashboard"
+                                    "/dashboard?contextType=APPLICATION&contextId=" + contextId,
+                                    "APPLICATION",
+                                    contextId
                             );
                         }
                     }
@@ -155,7 +157,9 @@ public class MessagingService {
                                 "NEW_MESSAGE",
                                 "Nouveau message concernant votre candidature",
                                 excerpt,
-                                "/mes-candidatures"
+                                "/mes-candidatures?contextType=APPLICATION&contextId=" + contextId,
+                                "APPLICATION",
+                                contextId
                         );
                     }
                 }
@@ -173,7 +177,9 @@ public class MessagingService {
                                     "NEW_MESSAGE",
                                     "Nouveau message de " + senderName,
                                     excerpt,
-                                    "/dashboard"
+                                    "/dashboard?contextType=ANNUAL_APPLICATION&contextId=" + contextId,
+                                    "ANNUAL_APPLICATION",
+                                    contextId
                             );
                         }
                     }
@@ -184,7 +190,9 @@ public class MessagingService {
                                 "NEW_MESSAGE",
                                 "Nouveau message concernant votre candidature permanente",
                                 excerpt,
-                                "/mes-candidatures"
+                                "/mes-candidatures?contextType=ANNUAL_APPLICATION&contextId=" + contextId,
+                                "ANNUAL_APPLICATION",
+                                contextId
                         );
                     }
                 }
@@ -201,7 +209,9 @@ public class MessagingService {
                                     "NEW_MESSAGE",
                                     "Message pour le prêt de matériel (" + req.getEquipmentName() + ")",
                                     excerpt,
-                                    "/dashboard"
+                                    "/materiels?contextType=EQUIPMENT&contextId=" + contextId,
+                                    "EQUIPMENT",
+                                    contextId
                             );
                         }
                     }
