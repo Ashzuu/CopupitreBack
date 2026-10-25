@@ -66,10 +66,25 @@ public class ReinforcementService {
     }
 
     /**
-     * Récupère l'ensemble des réponses/candidatures pour une annonce donnée.
+     * Récupère l'ensemble des réponses/candidatures pour une annonce donnée (US-DASH-04).
+     * Accessible uniquement aux administrateurs de l'organisation propriétaire de l'annonce.
      */
-    public List<ReinforcementResponseDTO> getAllResponses(String id){
-        return ReinforcementMapper.toResponseDto(this.applicationRepo.findAllByIdRequest(Long.parseLong(id)));
+    public List<ReinforcementResponseDTO> getAllResponses(Long id, UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            throw new AccessDeniedException("Utilisateur non authentifié");
+        }
+        ReinforcementRequest request = repo.findById(id)
+                .orElseThrow(() -> new UnknownID("Demande de renfort inconnue : " + id));
+
+        if (!orgRepo.isAdminOfOrganization(userDetails.getId(), request.getOrganization().getId())) {
+            throw new AccessDeniedException("Vous n'êtes pas administrateur de cette organisation.");
+        }
+
+        return ReinforcementMapper.toResponseDto(this.applicationRepo.findAllByIdRequest(id));
+    }
+
+    public List<ReinforcementResponseDTO> getAllResponses(String id, UserDetailsImpl userDetails) {
+        return getAllResponses(Long.parseLong(id), userDetails);
     }
 
     /**

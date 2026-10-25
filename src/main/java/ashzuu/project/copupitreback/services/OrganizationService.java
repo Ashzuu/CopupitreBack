@@ -2,6 +2,7 @@ package ashzuu.project.copupitreback.services;
 
 import ashzuu.project.copupitreback.dto.equipment.EquipmentRequestDTO;
 import ashzuu.project.copupitreback.dto.organization.*;
+import ashzuu.project.copupitreback.dto.permanent.PermanentAnnouncementDTO;
 import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementAnnouncementDTO;
 import ashzuu.project.copupitreback.exceptions.UnknownID;
 import ashzuu.project.copupitreback.jpa.entities.*;
@@ -13,6 +14,7 @@ import ashzuu.project.copupitreback.jpa.repositories.OrganizationRepository;
 import ashzuu.project.copupitreback.jpa.repositories.UserRepository;
 import ashzuu.project.copupitreback.mapper.EquipmentMapper;
 import ashzuu.project.copupitreback.mapper.OrganizationMapper;
+import ashzuu.project.copupitreback.mapper.PermanentMapper;
 import ashzuu.project.copupitreback.mapper.ReinforcementMapper;
 import ashzuu.project.copupitreback.security.UserDetailsImpl;
 import ashzuu.project.copupitreback.services.email.EmailService;
@@ -116,6 +118,20 @@ public class OrganizationService {
             throw new UnknownID("L'organisation recherchée est inconnue");
         }
         return EquipmentMapper.toDto(org.get().getEquipmentRequests());
+    }
+
+    /**
+     * Récupère la liste des besoins annuels (recrutements permanents) émis pour une organisation spécifique.
+     *
+     * @param id l'identifiant unique de l'organisation
+     * @return la liste des besoins annuels liés à l'organisation
+     */
+    public List<PermanentAnnouncementDTO> getAnnualNeedsOnOrganization(String id) {
+        Optional<Organization> org = this.repo.findById(Long.parseLong(id));
+        if (org.isEmpty()) {
+            throw new UnknownID("L'organisation recherchée est inconnue");
+        }
+        return PermanentMapper.toDtoList(org.get().getAnnualNeeds());
     }
 
     @Transactional

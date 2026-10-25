@@ -376,4 +376,37 @@ class ReinforcementServiceTest {
     void testGetMyApplicationsUnauthenticatedThrows() {
         assertThrows(AccessDeniedException.class, () -> reinforcementService.getMyApplications(null));
     }
+
+    @Test
+    void testGetAllResponsesAsAdmin() {
+        UserDetailsImpl details = new UserDetailsImpl(User.builder().id(1L).username("admin").build());
+        Organization org = Organization.builder().id(5L).build();
+        ReinforcementRequest request = ReinforcementRequest.builder().id(10L).organization(org).build();
+        Application app = Application.builder().id(20L).request(request).status("PENDING").build();
+
+        when(reinforcementRepository.findById(10L)).thenReturn(Optional.of(request));
+        when(organizationRepository.isAdminOfOrganization(1L, 5L)).thenReturn(true);
+        when(applicationRepository.findAllByIdRequest(10L)).thenReturn(List.of(app));
+
+        List<ReinforcementResponseDTO> responses = reinforcementService.getAllResponses(10L, details);
+        assertNotNull(responses);
+        assertEquals(1, responses.size());
+    }
+
+    @Test
+    void testGetAllResponsesNotAdminThrows() {
+        UserDetailsImpl details = new UserDetailsImpl(User.builder().id(2L).username("other").build());
+        Organization org = Organization.builder().id(5L).build();
+        ReinforcementRequest request = ReinforcementRequest.builder().id(10L).organization(org).build();
+
+        when(reinforcementRepository.findById(10L)).thenReturn(Optional.of(request));
+        when(organizationRepository.isAdminOfOrganization(2L, 5L)).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> reinforcementService.getAllResponses(10L, details));
+    }
+
+    @Test
+    void testGetAllResponsesUnauthenticatedThrows() {
+        assertThrows(AccessDeniedException.class, () -> reinforcementService.getAllResponses(10L, null));
+    }
 }

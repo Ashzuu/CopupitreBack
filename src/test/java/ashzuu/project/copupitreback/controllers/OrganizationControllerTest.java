@@ -127,6 +127,21 @@ class OrganizationControllerTest {
     }
 
     @Test
+    void testGetAnnualNeedsOnOrganization() throws Exception {
+        User userEntity = User.builder().id(1L).username("testuser").role(Role.USER).build();
+        UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
+
+        ashzuu.project.copupitreback.dto.permanent.PermanentAnnouncementDTO need =
+                ashzuu.project.copupitreback.dto.permanent.PermanentAnnouncementDTO.builder().id(30L).instrument("Violon").build();
+        when(organizationService.getAnnualNeedsOnOrganization("10")).thenReturn(List.of(need));
+
+        mockMvc.perform(get("/organizations/10/annual-needs")
+                .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].instrument").value("Violon"));
+    }
+
+    @Test
     void testCreateOrganization() throws Exception {
         User userEntity = User.builder().id(1L).username("testuser").role(Role.USER).build();
         UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);

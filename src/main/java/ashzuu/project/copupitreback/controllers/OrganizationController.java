@@ -3,6 +3,7 @@ package ashzuu.project.copupitreback.controllers;
 import ashzuu.project.copupitreback.dto.equipment.EquipmentRequestDTO;
 import ashzuu.project.copupitreback.dto.organization.AddAdminRequest;
 import ashzuu.project.copupitreback.dto.organization.OrganizationDTO;
+import ashzuu.project.copupitreback.dto.permanent.PermanentAnnouncementDTO;
 import ashzuu.project.copupitreback.dto.reinforcement.ReinforcementAnnouncementDTO;
 import ashzuu.project.copupitreback.security.UserDetailsImpl;
 import ashzuu.project.copupitreback.services.OrganizationService;
@@ -50,6 +51,11 @@ public class OrganizationController {
     @GetMapping("/{id}/equipment-requests")
     public ResponseEntity<List<EquipmentRequestDTO>> getEquipmentRequestOnOrganization(@PathVariable String id){
         return ResponseEntity.ok(this.service.getEquipmentRequestOnOrganization(id));
+    }
+
+    @GetMapping("/{id}/annual-needs")
+    public ResponseEntity<List<PermanentAnnouncementDTO>> getAnnualNeedsOnOrganization(@PathVariable String id){
+        return ResponseEntity.ok(this.service.getAnnualNeedsOnOrganization(id));
     }
 
     @PostMapping("/save")

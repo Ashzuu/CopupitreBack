@@ -53,6 +53,13 @@ public class AnnualNeedService {
     }
 
     /**
+     * Récupère les besoins annuels d'une organisation spécifique.
+     */
+    public List<PermanentAnnouncementDTO> getPermanentAnnouncementsByOrganization(Long organizationId) {
+        return PermanentMapper.toDtoList(this.repo.findByOrganizationId(organizationId));
+    }
+
+    /**
      * Récupère les besoins annuels des organisations administrées par l'utilisateur connecté.
      */
     public List<PermanentAnnouncementDTO> getMyPermanentAnnouncements(UserDetailsImpl userDetails) {

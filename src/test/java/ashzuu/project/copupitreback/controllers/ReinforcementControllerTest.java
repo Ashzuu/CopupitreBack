@@ -173,4 +173,25 @@ class ReinforcementControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].announcementId").value(10));
     }
+
+    @Test
+    void testGetAllResponsesAuthenticated() throws Exception {
+        User userEntity = User.builder().id(1L).username("admin").role(Role.USER).build();
+        UserDetailsImpl userDetails = new UserDetailsImpl(userEntity);
+
+        ReinforcementResponseDTO resp = ReinforcementResponseDTO.builder()
+                .id(1L)
+                .announcementId(10L)
+                .status("PENDING")
+                .respondentUsername("applicant")
+                .build();
+
+        when(reinforcementService.getAllResponses(eq(10L), any())).thenReturn(List.of(resp));
+
+        mockMvc.perform(get("/reinforcements/10/responses")
+                .with(SecurityMockMvcRequestPostProcessors.user(userDetails)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
 }

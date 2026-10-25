@@ -48,11 +48,17 @@ public class ReinforcementController {
     }
 
     /**
-     * Point d'accès pour récupérer toutes les réponses à une annonce spécifique.
+     * Point d'accès pour récupérer toutes les réponses à une annonce spécifique (US-DASH-04).
+     * Réservé aux administrateurs de l'organisation propriétaire.
      */
     @GetMapping("/{id}/responses")
-    public ResponseEntity<List<ReinforcementResponseDTO>> getAllResponses(@PathVariable String id){
-        return ResponseEntity.ok(this.service.getAllResponses(id));
+    public ResponseEntity<List<ReinforcementResponseDTO>> getAllResponses(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(this.service.getAllResponses(id, userDetails));
     }
 
     /**

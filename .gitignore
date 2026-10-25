@@ -38,3 +38,5 @@ build/
 !.env.example
 
 .gemini/
+
+logs/

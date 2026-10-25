@@ -125,4 +125,20 @@ class AnnualNeedControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACCEPTED"));
     }
+
+    @Test
+    void testGetAnnouncementsByOrganization() throws Exception {
+        PermanentAnnouncementDTO dto = PermanentAnnouncementDTO.builder()
+                .id(2L)
+                .instrument("Clarinette")
+                .organizationId(5L)
+                .build();
+        when(service.getPermanentAnnouncementsByOrganization(5L)).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/annual-needs/organization/5")
+                        .with(SecurityMockMvcRequestPostProcessors.user(createUserDetails(1L, "user"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].instrument").value("Clarinette"));
+    }
 }

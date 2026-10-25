@@ -36,6 +36,14 @@ public class AnnualNeedController {
     }
 
     /**
+     * Point d'accès pour récupérer les besoins annuels d'une organisation spécifique.
+     */
+    @GetMapping("/organization/{organizationId}")
+    public ResponseEntity<List<PermanentAnnouncementDTO>> getAnnouncementsByOrganization(@PathVariable Long organizationId) {
+        return ResponseEntity.ok(this.service.getPermanentAnnouncementsByOrganization(organizationId));
+    }
+
+    /**
      * Point d'accès pour récupérer les besoins annuels des organisations administrées par l'utilisateur connecté.
      */
     @GetMapping("/me")

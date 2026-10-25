@@ -20,5 +20,6 @@ public interface AnnualNeedRepository extends JpaRepository<AnnualNeeds, Long> {
         """)
     List<AnnualNeeds> findByAdminUserId(@Param("userId") Long userId);
 
-    List<AnnualNeeds> findByOrganizationId(Long organizationId);
+    @Query("select n from AnnualNeeds n left join fetch n.organization o where o.id = :organizationId")
+    List<AnnualNeeds> findByOrganizationId(@Param("organizationId") Long organizationId);
 }
