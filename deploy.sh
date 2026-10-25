@@ -81,7 +81,12 @@ mkdir -p logs
 chmod 777 logs
 log_success "Dossier de logs configuré (./logs)"
 
-# 4. Construction et lancement des conteneurs
+# 4. Assurer l'existence du réseau Docker partagé et lancement des conteneurs
+if ! docker network inspect copupitre-network >/dev/null 2>&1; then
+    log_info "Création du réseau Docker partagé 'copupitre-network'..."
+    docker network create copupitre-network
+fi
+
 log_info "Construction des images et démarrage des conteneurs via Docker Compose..."
 $COMPOSE_CMD up -d --build --remove-orphans
 

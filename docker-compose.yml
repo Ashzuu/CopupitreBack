@@ -23,9 +23,9 @@ services:
     volumes:
       - ./logs:/app/logs
     networks:
-      - copupitre-net
+      - copupitre-network
 
 networks:
-  copupitre-net:
+  copupitre-network:
     name: copupitre-network
-    driver: bridge
+    external: true
