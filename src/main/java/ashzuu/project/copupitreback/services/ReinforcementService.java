@@ -34,18 +34,24 @@ public class ReinforcementService {
     private final UserRepository userRepo;
     private final ApplicationRepository applicationRepo;
     private final EmailService emailService;
+    private final NotificationService notificationService;
+    private final SubscriptionService subscriptionService;
 
     public ReinforcementService(
             ReinforcementRepository repo,
             OrganizationRepository orgRepo,
             UserRepository userRepo,
             ApplicationRepository applicationRepo,
-            EmailService emailService){
+            EmailService emailService,
+            NotificationService notificationService,
+            SubscriptionService subscriptionService){
         this.repo = repo;
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
         this.applicationRepo = applicationRepo;
         this.emailService = emailService;
+        this.notificationService = notificationService;
+        this.subscriptionService = subscriptionService;
     }
 
     /**
@@ -135,6 +141,21 @@ public class ReinforcementService {
                 .build();
 
         Application saved = applicationRepo.save(application);
+
+        // Notification in-app des administrateurs de l'organisation (US-COM-02)
+        if (request.getOrganization() != null) {
+            List<User> admins = orgRepo.findAdminsByOrganizationId(request.getOrganization().getId());
+            for (User admin : admins) {
+                notificationService.createNotification(
+                        admin,
+                        "NEW_APPLICATION",
+                        "Nouvelle candidature reçue",
+                        user.getFirstName() + " " + user.getLastName() + " a postulé pour : " + request.getTitle(),
+                        "/dashboard"
+                );
+            }
+        }
+
         return ReinforcementMapper.toResponseDto(saved);
     }
 
@@ -187,14 +208,25 @@ public class ReinforcementService {
         }
 
         // Envoi de la notification par courriel (via l'interface EmailService)
-        if (application.getUser() != null && application.getUser().getEmail() != null) {
-            String orgName = request.getOrganization() != null ? request.getOrganization().getName() : "Organisation";
-            emailService.sendApplicationStatusUpdate(
-                    application.getUser().getEmail(),
-                    application.getUser().getUsername(),
-                    normalizedStatus,
-                    orgName
+        String orgName = request.getOrganization() != null ? request.getOrganization().getName() : "Organisation";
+        if (application.getUser() != null) {
+            String statusLabel = "ACCEPTED".equals(normalizedStatus) ? "acceptée" : "refusée";
+            notificationService.createNotification(
+                    application.getUser(),
+                    "APPLICATION_STATUS",
+                    "Candidature " + statusLabel,
+                    "Votre candidature pour \"" + request.getTitle() + "\" auprès de " + orgName + " a été " + statusLabel + ".",
+                    "/mes-candidatures"
             );
+
+            if (application.getUser().getEmail() != null) {
+                emailService.sendApplicationStatusUpdate(
+                        application.getUser().getEmail(),
+                        application.getUser().getUsername(),
+                        normalizedStatus,
+                        orgName
+                );
+            }
         }
 
         return ReinforcementMapper.toResponseDto(saved);
@@ -298,6 +330,20 @@ public class ReinforcementService {
         if (isNew && organization != null) {
             String orgEmail = organization.getName().toLowerCase().replaceAll("\\s+", "") + "@copupitre.fr";
             emailService.sendNewAnnouncementAlert(orgEmail, organization.getName(), saved.getTitle());
+
+            // Notification in-app des musiciens abonnés à l'orchestre (US-COM-01 & US-COM-02)
+            List<User> subscribers = subscriptionService.getSubscribedUsers(organization.getId());
+            for (User subscriber : subscribers) {
+                if (!subscriber.getId().equals(userDetails.getId())) {
+                    notificationService.createNotification(
+                            subscriber,
+                            "NEW_ANNOUNCEMENT",
+                            "Nouvelle annonce : " + saved.getTitle(),
+                            "L'ensemble \"" + organization.getName() + "\" recherche : " + saved.getInstrumentNeeded() + ".",
+                            "/renforts"
+                    );
+                }
+            }
         }
 
         return ReinforcementMapper.toAnnouncementDto(saved);

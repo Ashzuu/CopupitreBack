@@ -1,6 +1,7 @@
 package ashzuu.project.copupitreback.jpa.repositories;
 
 import ashzuu.project.copupitreback.jpa.entities.organization.Organization;
+import ashzuu.project.copupitreback.jpa.entities.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +21,10 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
         where admin.user.id = :userId and admin.organization.id = :orgId
         """)
     boolean isAdminOfOrganization(@Param("userId") Long userId, @Param("orgId") Long orgId);
+
+    @Query("""
+        select admin.user from OrganizationAdmin admin
+        where admin.organization.id = :orgId
+        """)
+    List<User> findAdminsByOrganizationId(@Param("orgId") Long orgId);
 }

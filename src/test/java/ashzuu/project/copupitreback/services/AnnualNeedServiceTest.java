@@ -49,6 +49,12 @@ class AnnualNeedServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private NotificationService notificationService;
+
+    @Mock
+    private SubscriptionService subscriptionService;
+
     @InjectMocks
     private AnnualNeedService service;
 

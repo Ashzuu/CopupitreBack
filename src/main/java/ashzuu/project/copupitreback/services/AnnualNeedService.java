@@ -31,18 +31,24 @@ public class AnnualNeedService {
     private final OrganizationRepository orgRepo;
     private final UserRepository userRepo;
     private final EmailService emailService;
+    private final NotificationService notificationService;
+    private final SubscriptionService subscriptionService;
 
     public AnnualNeedService(
             AnnualNeedRepository repo,
             AnnualNeedApplicationRepository applicationRepo,
             OrganizationRepository orgRepo,
             UserRepository userRepo,
-            EmailService emailService) {
+            EmailService emailService,
+            NotificationService notificationService,
+            SubscriptionService subscriptionService) {
         this.repo = repo;
         this.applicationRepo = applicationRepo;
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
         this.emailService = emailService;
+        this.notificationService = notificationService;
+        this.subscriptionService = subscriptionService;
     }
 
     /**
@@ -113,6 +119,21 @@ public class AnnualNeedService {
                 .build();
 
         AnnualNeedApplication saved = applicationRepo.save(application);
+
+        // Notification in-app des administrateurs de l'organisation (US-COM-02)
+        if (need.getOrganization() != null) {
+            List<User> admins = orgRepo.findAdminsByOrganizationId(need.getOrganization().getId());
+            for (User admin : admins) {
+                notificationService.createNotification(
+                        admin,
+                        "NEW_APPLICATION",
+                        "Nouvelle candidature de musicien permanent",
+                        user.getFirstName() + " " + user.getLastName() + " a postulé pour le poste : " + need.getInstrument(),
+                        "/dashboard"
+                );
+            }
+        }
+
         return PermanentMapper.toResponseDto(saved);
     }
 
@@ -152,15 +173,26 @@ public class AnnualNeedService {
         application.setStatus(normalizedStatus);
         AnnualNeedApplication saved = applicationRepo.save(application);
 
-        // Envoi de l'alerte par courriel
-        if (application.getUser() != null && application.getUser().getEmail() != null) {
-            String orgName = need.getOrganization() != null ? need.getOrganization().getName() : "Organisation";
-            emailService.sendApplicationStatusUpdate(
-                    application.getUser().getEmail(),
-                    application.getUser().getUsername(),
-                    normalizedStatus,
-                    orgName
+        // Envoi des alertes in-app et par courriel
+        String orgName = need.getOrganization() != null ? need.getOrganization().getName() : "Organisation";
+        if (application.getUser() != null) {
+            String statusLabel = "ACCEPTED".equals(normalizedStatus) ? "acceptée" : "refusée";
+            notificationService.createNotification(
+                    application.getUser(),
+                    "APPLICATION_STATUS",
+                    "Candidature permanente " + statusLabel,
+                    "Votre candidature de musicien permanent pour \"" + need.getInstrument() + "\" auprès de " + orgName + " a été " + statusLabel + ".",
+                    "/mes-candidatures"
             );
+
+            if (application.getUser().getEmail() != null) {
+                emailService.sendApplicationStatusUpdate(
+                        application.getUser().getEmail(),
+                        application.getUser().getUsername(),
+                        normalizedStatus,
+                        orgName
+                );
+            }
         }
 
         return PermanentMapper.toResponseDto(saved);
