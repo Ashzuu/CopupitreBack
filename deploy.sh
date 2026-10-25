@@ -111,7 +111,9 @@ wait_for_service() {
     done
     echo ""
     log_error "Délai dépassé en attendant la santé du conteneur [${service_name}]."
-    docker logs "$service_name" --tail 50
+    echo -e "${YELLOW}--- Derniers logs du conteneur [${service_name}] ---${NC}"
+    docker logs "$service_name" --tail 100
+    echo -e "${YELLOW}-----------------------------------------------------${NC}"
     return 1
 }
 
