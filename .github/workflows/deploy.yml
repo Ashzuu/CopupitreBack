@@ -1,4 +1,4 @@
-name: Deploiement Docker sur CentOS (CopupitreBack)
+name: Deploiement Docker sur Debian (CopupitreBack)
 
 on:
   push:

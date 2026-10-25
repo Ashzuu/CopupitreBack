@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script de déploiement automatisé CopupitreBack (Environnements Linux / CentOS)
+# Script de déploiement automatisé CopupitreBack (Environnements Linux / Debian)
 # ==============================================================================
 
 set -euo pipefail
@@ -53,7 +53,8 @@ fi
 
 # 2. Vérification des prérequis Docker et Docker Compose
 if ! command -v docker &> /dev/null; then
-    log_error "Docker n'est pas installé sur cette machine. Veuillez installer Docker avant de continuer."
+    log_error "Docker n'est pas installé sur cette machine."
+    log_error "Sur Debian / Ubuntu : sudo apt-get update && sudo apt-get install -y docker.io docker-compose-plugin"
     exit 1
 fi
 
@@ -68,7 +69,8 @@ if docker compose version &> /dev/null; then
 elif command -v docker-compose &> /dev/null; then
     COMPOSE_CMD="docker-compose"
 else
-    log_error "Ni 'docker compose' ni 'docker-compose' n'ont été trouvés. Veuillez installer le plugin Compose."
+    log_error "Ni 'docker compose' ni 'docker-compose' n'ont été trouvés."
+    log_error "Sur Debian / Ubuntu : sudo apt-get update && sudo apt-get install -y docker-compose-plugin"
     exit 1
 fi
 log_success "Docker Compose détecté : $COMPOSE_CMD"
@@ -120,7 +122,7 @@ wait_for_service "copupitre-back" 30 2
 
 # 6. Validation du point de contrôle HTTP Healthcheck
 source .env 2>/dev/null || true
-PORT="${BACKEND_PORT:-8080}"
+PORT="${BACKEND_PORT:-40080}"
 log_info "Test du endpoint HTTP Healthcheck (http://localhost:${PORT}/api/logs)..."
 
 if command -v curl &> /dev/null; then

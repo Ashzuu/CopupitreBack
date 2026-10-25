@@ -9,7 +9,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-copupitre}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/init-db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-copupitre} -d $${POSTGRES_DB:-copupitre}"]
       interval: 5s
@@ -26,7 +25,7 @@ services:
     container_name: copupitre-back
     restart: unless-stopped
     ports:
-      - "${BACKEND_PORT:-8080}:8080"
+      - "${BACKEND_PORT:-40080}:8080"
     environment:
       DB_HOST: copupitre-db
       DB_PORT: 5432
@@ -37,7 +36,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-defaultSecretKeyThatIsVeryLongAndSecureEnoughForHS256AlgorithmToBeValid123!}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       LOG_PATH: /app/logs
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200,http://localhost:4000,http://localhost}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200,http://localhost:40000,http://localhost:4000,http://localhost}
     volumes:
       - ./logs:/app/logs
     depends_on:
