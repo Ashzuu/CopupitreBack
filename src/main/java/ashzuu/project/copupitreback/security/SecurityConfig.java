@@ -3,6 +3,7 @@ package ashzuu.project.copupitreback.security;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -45,9 +47,39 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // Endpoints d'authentification et logs
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/logs/**", "/logs").permitAll()
+
+                // Endpoints spécifiques authentifiés sous /organizations
+                .requestMatchers(HttpMethod.GET, "/organizations/me").authenticated()
+                .requestMatchers(HttpMethod.GET, "/organizations/*/is-subscribed").authenticated()
+                // Consultation publique des fiches organisations (liste et détail par ID ou slug)
+                .requestMatchers(HttpMethod.GET, "/organizations/**").permitAll()
+
+                // Endpoints spécifiques authentifiés sous /reinforcements
+                .requestMatchers(HttpMethod.GET, "/reinforcements/me").authenticated()
+                .requestMatchers(HttpMethod.GET, "/reinforcements/my-applications").authenticated()
+                .requestMatchers(HttpMethod.GET, "/reinforcements/*/responses").authenticated()
+                // Consultation publique des annonces de renfort
+                .requestMatchers(HttpMethod.GET, "/reinforcements/all").permitAll()
+
+                // Endpoints spécifiques authentifiés sous /annual-needs
+                .requestMatchers(HttpMethod.GET, "/annual-needs/me").authenticated()
+                .requestMatchers(HttpMethod.GET, "/annual-needs/my-applications").authenticated()
+                // Consultation publique des besoins annuels
+                .requestMatchers(HttpMethod.GET, "/annual-needs/**").permitAll()
+
+                // Endpoints spécifiques authentifiés sous /equipments
+                .requestMatchers(HttpMethod.GET, "/equipments/me").authenticated()
+                // Consultation publique du matériel
+                .requestMatchers(HttpMethod.GET, "/equipments/**").permitAll()
+
+                // Toutes les autres routes (création, modification, suppression, messagerie, etc.) nécessitent l'authentification
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(new HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED))
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

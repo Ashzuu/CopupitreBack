@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
     @Query("""
@@ -27,4 +28,6 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
         where admin.organization.id = :orgId
         """)
     List<User> findAdminsByOrganizationId(@Param("orgId") Long orgId);
+
+    Optional<Organization> findFirstByNameIgnoreCase(String name);
 }

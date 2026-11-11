@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.context.annotation.Import;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
@@ -30,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AnnualNeedController.class)
+@Import({ashzuu.project.copupitreback.security.SecurityConfig.class, ashzuu.project.copupitreback.security.JwtAuthenticationFilter.class})
 class AnnualNeedControllerTest {
 
     @Autowired
@@ -54,8 +56,10 @@ class AnnualNeedControllerTest {
 
     @Test
     void testGetAllUnauthenticated() throws Exception {
+        when(service.getAllPermanentAnnouncements()).thenReturn(List.of());
+
         mockMvc.perform(get("/annual-needs/all"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk());
     }
 
     @Test

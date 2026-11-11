@@ -75,11 +75,68 @@ public class OrganizationService {
     }
 
     public OrganizationDTO getById(String id) {
-        Optional<Organization> org = this.repo.findById(Long.parseLong(id));
-        if (org.isEmpty()) {
+        Organization org = findOrganizationByIdOrName(id);
+        return OrganizationMapper.toDto(org);
+    }
+
+    /**
+     * Recherche une organisation par son identifiant technique ou par son nom / slug.
+     *
+     * @param identifier l'identifiant technique (ex: "10") ou le nom / slug (ex: "stock", "harmonie-de-paris")
+     * @return l'entité {@link Organization} correspondante
+     * @throws UnknownID si aucune organisation ne correspond
+     */
+    public Organization findOrganizationByIdOrName(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
             throw new UnknownID("L'organisation recherchée est inconnue");
         }
-        return OrganizationMapper.toDto(org.get());
+
+        // 1. Tenter par ID technique numérique
+        try {
+            Long numericId = Long.parseLong(identifier.trim());
+            Optional<Organization> byId = this.repo.findById(numericId);
+            if (byId.isPresent()) {
+                return byId.get();
+            }
+        } catch (NumberFormatException ignored) {
+            // L'identifiant n'est pas un nombre, on poursuit la recherche par nom/slug
+        }
+
+        String trimmed = identifier.trim();
+
+        // 2. Recherche par nom direct (insensible à la casse)
+        Optional<Organization> byName = this.repo.findFirstByNameIgnoreCase(trimmed);
+        if (byName.isPresent()) {
+            return byName.get();
+        }
+
+        // 3. Recherche en remplaçant les tirets par des espaces (ex: "mon-orchestre" -> "mon orchestre")
+        String withSpaces = trimmed.replace('-', ' ');
+        Optional<Organization> byNameWithSpaces = this.repo.findFirstByNameIgnoreCase(withSpaces);
+        if (byNameWithSpaces.isPresent()) {
+            return byNameWithSpaces.get();
+        }
+
+        // 4. Recherche par slug normalisé
+        String targetSlug = slugify(trimmed);
+        if (!targetSlug.isBlank()) {
+            for (Organization org : this.repo.findAll()) {
+                if (org.getName() != null && slugify(org.getName()).equalsIgnoreCase(targetSlug)) {
+                    return org;
+                }
+            }
+        }
+
+        throw new UnknownID("L'organisation recherchée est inconnue");
+    }
+
+    private static String slugify(String input) {
+        if (input == null) return "";
+        String normalized = java.text.Normalizer.normalize(input, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return normalized.toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("^-+|-+$", "");
     }
 
     /**
@@ -95,43 +152,34 @@ public class OrganizationService {
     /**
      * Récupère la liste des annonces de renfort publiées pour une organisation spécifique.
      *
-     * @param id l'identifiant unique de l'organisation
+     * @param id l'identifiant unique ou nom de l'organisation
      * @return la liste des annonces de renfort liées à l'organisation
      */
     public List<ReinforcementAnnouncementDTO> getAnnouncementsOnOrganization(String id) {
-        Optional<Organization> org = this.repo.findById(Long.parseLong(id));
-        if (org.isEmpty()) {
-            throw new UnknownID("L'organisation recherchée est inconnue");
-        }
-        return ReinforcementMapper.toAnnouncementDto(org.get().getReinforcementRequests());
+        Organization org = findOrganizationByIdOrName(id);
+        return ReinforcementMapper.toAnnouncementDto(org.getReinforcementRequests());
     }
 
     /**
      * Récupère la liste des demandes d'équipements émises pour une organisation spécifique.
      *
-     * @param id l'identifiant unique de l'organisation
+     * @param id l'identifiant unique ou nom de l'organisation
      * @return la liste des demandes d'équipements liées à l'organisation
      */
     public List<EquipmentRequestDTO> getEquipmentRequestOnOrganization(String id) {
-        Optional<Organization> org = this.repo.findById(Long.parseLong(id));
-        if (org.isEmpty()) {
-            throw new UnknownID("L'organisation recherchée est inconnue");
-        }
-        return EquipmentMapper.toDto(org.get().getEquipmentRequests());
+        Organization org = findOrganizationByIdOrName(id);
+        return EquipmentMapper.toDto(org.getEquipmentRequests());
     }
 
     /**
      * Récupère la liste des besoins annuels (recrutements permanents) émis pour une organisation spécifique.
      *
-     * @param id l'identifiant unique de l'organisation
+     * @param id l'identifiant unique ou nom de l'organisation
      * @return la liste des besoins annuels liés à l'organisation
      */
     public List<PermanentAnnouncementDTO> getAnnualNeedsOnOrganization(String id) {
-        Optional<Organization> org = this.repo.findById(Long.parseLong(id));
-        if (org.isEmpty()) {
-            throw new UnknownID("L'organisation recherchée est inconnue");
-        }
-        return PermanentMapper.toDtoList(org.get().getAnnualNeeds());
+        Organization org = findOrganizationByIdOrName(id);
+        return PermanentMapper.toDtoList(org.getAnnualNeeds());
     }
 
     @Transactional

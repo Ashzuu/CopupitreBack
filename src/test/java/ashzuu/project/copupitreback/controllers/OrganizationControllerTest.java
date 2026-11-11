@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(OrganizationController.class)
+@Import({ashzuu.project.copupitreback.security.SecurityConfig.class, ashzuu.project.copupitreback.security.JwtAuthenticationFilter.class})
 class OrganizationControllerTest {
 
     @Autowired
@@ -52,8 +54,32 @@ class OrganizationControllerTest {
 
     @Test
     void testGetAllUnauthenticated() throws Exception {
+        OrganizationDTO org = OrganizationDTO.builder().id(10L).name("Philharmonie").build();
+        when(organizationService.getAll()).thenReturn(List.of(org));
+
         mockMvc.perform(get("/organizations/all"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Philharmonie"));
+    }
+
+    @Test
+    void testGetOrganizationByIdUnauthenticated() throws Exception {
+        OrganizationDTO org = OrganizationDTO.builder().id(10L).name("Philharmonie").build();
+        when(organizationService.getById("10")).thenReturn(org);
+
+        mockMvc.perform(get("/organizations/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Philharmonie"));
+    }
+
+    @Test
+    void testGetOrganizationBySlugOrNameUnauthenticated() throws Exception {
+        OrganizationDTO org = OrganizationDTO.builder().id(10L).name("stock").build();
+        when(organizationService.getById("stock")).thenReturn(org);
+
+        mockMvc.perform(get("/organizations/stock"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("stock"));
     }
 
     @Test

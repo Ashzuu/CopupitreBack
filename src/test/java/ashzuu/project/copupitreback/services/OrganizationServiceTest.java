@@ -64,6 +64,29 @@ class OrganizationServiceTest {
     }
 
     @Test
+    void testGetByNameSuccess() {
+        Organization o = Organization.builder().id(2L).name("stock").build();
+        when(organizationRepository.findFirstByNameIgnoreCase("stock")).thenReturn(Optional.of(o));
+
+        OrganizationDTO result = organizationService.getById("stock");
+        assertNotNull(result);
+        assertEquals("stock", result.getName());
+        assertEquals(2L, result.getId());
+    }
+
+    @Test
+    void testGetBySlugSuccess() {
+        Organization o = Organization.builder().id(3L).name("Harmonie de Paris").build();
+        when(organizationRepository.findFirstByNameIgnoreCase("harmonie-de-paris")).thenReturn(Optional.empty());
+        when(organizationRepository.findFirstByNameIgnoreCase("harmonie de paris")).thenReturn(Optional.of(o));
+
+        OrganizationDTO result = organizationService.getById("harmonie-de-paris");
+        assertNotNull(result);
+        assertEquals("Harmonie de Paris", result.getName());
+        assertEquals(3L, result.getId());
+    }
+
+    @Test
     void testGetByIdNotFound() {
         when(organizationRepository.findById(1L)).thenReturn(Optional.empty());
 
