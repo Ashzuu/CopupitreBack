@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,7 +46,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
+            .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 // Endpoints d'authentification et logs
                 .requestMatchers("/auth/**").permitAll()
@@ -54,7 +55,8 @@ public class SecurityConfig {
                 // Endpoints spécifiques authentifiés sous /organizations
                 .requestMatchers(HttpMethod.GET, "/organizations/me").authenticated()
                 .requestMatchers(HttpMethod.GET, "/organizations/*/is-subscribed").authenticated()
-                // Consultation publique des fiches organisations (liste et détail par ID ou slug)
+                .requestMatchers(HttpMethod.GET, "/organizations/*/absences/**").authenticated()
+                // Consultation publique des fiches organisations (liste et détail par ID ou slug, musiciens, absences)
                 .requestMatchers(HttpMethod.GET, "/organizations/**").permitAll()
 
                 // Endpoints spécifiques authentifiés sous /reinforcements
